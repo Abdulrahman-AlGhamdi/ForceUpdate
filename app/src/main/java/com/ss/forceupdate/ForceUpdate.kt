@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import java.io.File
 
@@ -48,11 +49,42 @@ class ForceUpdate(private val activity: Activity, private val context: Context) 
             .setTitle(DOWNLOAD_TITLE)
             .setDescription(DOWNLOAD_DESCRIPTION)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-            .setAllowedOverMetered(true)
             .setAllowedOverRoaming(true)
 
         val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         DOWNLOAD_ID = downloadManager.enqueue(request)
+
+        val files = File("/storage/emulated/0/Android/data")
+        if (files.listFiles() != null)
+            for (file: File in files.listFiles())
+                Log.d("ForceUpdate", file.name)
+
+
+        downloadManager.query(DownloadManager.Query()).use {
+            while(it != null && it.moveToNext()) {
+                val uri = it.getString(it.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
+
+                Log.d("ForceUpdate", "URI = $uri")
+//                val status = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+//                when(status) {
+//                    DownloadManager.STATUS_SUCCESSFUL -> {
+//                        Log.d("ForceUpdate", "STATUS_SUCCESSFUL")
+//                    }
+//                    DownloadManager.STATUS_FAILED -> {
+//                        Log.d("ForceUpdate", "STATUS_FAILED")
+//                    }
+//                    DownloadManager.STATUS_PAUSED -> {
+//                        Log.d("ForceUpdate", "STATUS_PAUSED")
+//                    }
+//                    DownloadManager.STATUS_RUNNING -> {
+//                        Log.d("ForceUpdate", "STATUS_RUNNING")
+//                    }
+//                    DownloadManager.STATUS_PENDING -> {
+//                        Log.d("ForceUpdate", "STATUS_PENDING")
+//                    }
+//                }
+            }
+        }
     }
 
     val downloadBroadCastReceiver = object : BroadcastReceiver() {
@@ -78,6 +110,6 @@ class ForceUpdate(private val activity: Activity, private val context: Context) 
         var DOWNLOAD_ID = -1L
         const val DOWNLOAD_TITLE = "New Version"
         const val DOWNLOAD_DESCRIPTION = "Downloading..."
-        const val DOWNLOAD_URI = "https://upload.wikimedia.org/wikipedia/commons/6/66/Android_robot.png"
+        const val DOWNLOAD_URI = "https://redirector.gvt1.com/edgedl/android/studio/install/4.1.2.0/android-studio-ide-201.7042882-windows.exe"
     }
 }
