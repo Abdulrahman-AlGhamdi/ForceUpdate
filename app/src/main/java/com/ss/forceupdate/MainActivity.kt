@@ -1,5 +1,6 @@
 package com.ss.forceupdate
 
+import android.app.Activity
 import android.app.DownloadManager
 import android.content.IntentFilter
 import android.os.Bundle
@@ -11,6 +12,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var forceUpdate: ForceUpdate
     private lateinit var intentFilter: IntentFilter
+    val PACKAGE_INSTALLED_ACTION = "com.ss.forceupdate.SESSION_API_PACKAGE_INSTALLED"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

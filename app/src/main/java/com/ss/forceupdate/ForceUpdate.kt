@@ -1,21 +1,26 @@
 package com.ss.forceupdate
 
-import android.app.Activity
-import android.app.AlertDialog
-import android.app.DownloadManager
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
 import android.content.Intent
+import android.content.pm.PackageInstaller
 import android.net.Uri
-import android.util.Log
-import android.widget.Toast
-import java.io.File
+import android.os.Environment
+import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
+import java.io.*
 
 class ForceUpdate(private val activity: Activity, private val context: Context) {
 
+    private lateinit var downloadManager: DownloadManager
+
     fun isApplicationUpdated(newVersion: String) {
-        val sharedPreferences = activity.getSharedPreferences(FORCE_UPDATE_NAME, Context.MODE_PRIVATE)
+        val sharedPreferences = activity.getSharedPreferences(
+            FORCE_UPDATE_NAME,
+            Context.MODE_PRIVATE
+        )
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
         val applicationVersion = packageInfo.versionName
         val editor = sharedPreferences.edit()
@@ -50,49 +55,50 @@ class ForceUpdate(private val activity: Activity, private val context: Context) 
             .setDescription(DOWNLOAD_DESCRIPTION)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             .setAllowedOverRoaming(true)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "update.apk")
 
-        val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         DOWNLOAD_ID = downloadManager.enqueue(request)
-
-        val files = File("/storage/emulated/0/Android/data")
-        if (files.listFiles() != null)
-            for (file: File in files.listFiles())
-                Log.d("ForceUpdate", file.name)
-
-
-        downloadManager.query(DownloadManager.Query()).use {
-            while(it != null && it.moveToNext()) {
-                val uri = it.getString(it.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
-
-                Log.d("ForceUpdate", "URI = $uri")
-//                val status = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-//                when(status) {
-//                    DownloadManager.STATUS_SUCCESSFUL -> {
-//                        Log.d("ForceUpdate", "STATUS_SUCCESSFUL")
-//                    }
-//                    DownloadManager.STATUS_FAILED -> {
-//                        Log.d("ForceUpdate", "STATUS_FAILED")
-//                    }
-//                    DownloadManager.STATUS_PAUSED -> {
-//                        Log.d("ForceUpdate", "STATUS_PAUSED")
-//                    }
-//                    DownloadManager.STATUS_RUNNING -> {
-//                        Log.d("ForceUpdate", "STATUS_RUNNING")
-//                    }
-//                    DownloadManager.STATUS_PENDING -> {
-//                        Log.d("ForceUpdate", "STATUS_PENDING")
-//                    }
-//                }
-            }
-        }
     }
 
     val downloadBroadCastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            if (DOWNLOAD_ID == id)
-                Toast.makeText(context, "Downloaded", Toast.LENGTH_SHORT).show()
+            if (DOWNLOAD_ID == id) {
+                val file = File("/storage/emulated/0/Download/update.apk")
+                val uri = FileProvider.getUriForFile(context, context.packageName, file)
+                saveFile(uri)
+                installApk(uri)
+            }
         }
+    }
+
+    private fun saveFile(uri: Uri) {
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        if (cursor != null && cursor.moveToFirst()) {
+            val name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+            val descriptor = contentResolver.openFileDescriptor(uri, "r")?.fileDescriptor
+            val inputStream = FileInputStream(descriptor)
+            context.openFileOutput(name, Context.MODE_PRIVATE).write(inputStream.readBytes())
+        }
+        cursor?.close()
+    }
+
+    private fun installApk(uri: Uri) {
+        val file = context.filesDir.listFiles().first()
+        val packageInstaller = context.packageManager.packageInstaller
+        val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+        val sessionId = packageInstaller.createSession(sessionParams)
+        val session = packageInstaller.openSession(sessionId)
+
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        intent.setDataAndType(uri, "application/vnd.android.package-archive")
+        val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
+        val statusReceiver = pendingIntent.intentSender
+        session.commit(statusReceiver)
+        file.delete()
     }
 
     companion object {
@@ -110,6 +116,9 @@ class ForceUpdate(private val activity: Activity, private val context: Context) 
         var DOWNLOAD_ID = -1L
         const val DOWNLOAD_TITLE = "New Version"
         const val DOWNLOAD_DESCRIPTION = "Downloading..."
-        const val DOWNLOAD_URI = "https://redirector.gvt1.com/edgedl/android/studio/install/4.1.2.0/android-studio-ide-201.7042882-windows.exe"
+        const val DOWNLOAD_URI = "https://storage.evozi.com/apk/dl/21/03/08/com.ss.gpacalculator_2.apk"
+
+        const val TAG = "JAVA_INSTALLER"
+        const val PACKAGE_INSTALLED_ACTION = "com.ss.forceupdate.SESSION_API_PACKAGE_INSTALLED"
     }
 }
