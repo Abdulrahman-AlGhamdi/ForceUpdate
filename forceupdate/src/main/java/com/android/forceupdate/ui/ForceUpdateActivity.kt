@@ -38,9 +38,11 @@ class ForceUpdateActivity : AppCompatActivity() {
         binding.title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
         binding.message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
         binding.update.text = getString(R.string.forceupdate_update)
-        binding.logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
+        if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0) {
+            binding.logo.visibility = View.VISIBLE
+            binding.logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
+        } else binding.logo.visibility = View.GONE
         binding.applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME) ?: getString(R.string.forceupdate)
-
         binding.update.setOnClickListener {
             downloadApk()
         }
