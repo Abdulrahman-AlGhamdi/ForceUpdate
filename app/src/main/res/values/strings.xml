@@ -1,11 +1,3 @@
 <resources>
     <string name="app_name">Force Update</string>
-    <string name="percentage">%1$d%%</string>
-    <string name="new_update">New Update</string>
-    <string name="update">Update</string>
-    <string name="update_message">Dear user, a new update has been released.</string>
-    <string name="downloading">Downloading…</string>
-    <string name="installing">Installing…</string>
-    <string name="completed">Completed</string>
-    <string name="canceled">Canceled</string>
 </resources>

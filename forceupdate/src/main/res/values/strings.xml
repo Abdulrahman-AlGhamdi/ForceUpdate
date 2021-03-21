@@ -1,0 +1,12 @@
+<resources>
+    <!-- force update activity strings -->
+    <string name="forceupdate">Force Update</string>
+    <string name="forceupdate_update">Update</string>
+    <string name="forceupdate_canceled">Canceled</string>
+    <string name="forceupdate_completed">Completed</string>
+    <string name="forceupdate_installing">Installing…</string>
+    <string name="forceupdate_downloading">Downloading…</string>
+    <string name="forceupdate_percentage" translatable="false">%1$d%%</string>
+    <string name="forceupdate_new_update" translatable="false">New Update</string>
+    <string name="forceupdate_update_message">Dear user, a new update has been released.</string>
+</resources>
