@@ -92,29 +92,6 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
         session.close()
 
         return packageInstaller
-
-//        val installProgressLiveData: MutableLiveData<Boolean> = MutableLiveData()
-//
-//        packageInstaller.registerSessionCallback(object : PackageInstaller.SessionCallback() {
-//            override fun onCreated(sessionId: Int) {
-//            }
-//
-//            override fun onBadgingChanged(sessionId: Int) {
-//            }
-//
-//            override fun onActiveChanged(id: Int, active: Boolean) {
-//            }
-//
-//            override fun onProgressChanged(sessionId: Int, progress: Float) {
-//                ((progress / 0.90000004) * 100).toInt()
-//            }
-//
-//            override fun onFinished(id: Int, success: Boolean) {
-//                installProgressLiveData.postValue(success)
-//            }
-//        })
-//
-//        return installProgressLiveData
     }
 
     companion object {

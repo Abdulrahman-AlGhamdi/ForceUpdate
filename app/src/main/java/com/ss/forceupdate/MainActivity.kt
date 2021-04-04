@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
 
         ForceUpdateManager(
             activity = this,
-            versionCode = 2L,
             apkLink = "https://storage.evozi.com/apk/dl/16/09/04/com.soundcloud.android_65060.apk",
             title = "New Update",
             message = "New Update Available",

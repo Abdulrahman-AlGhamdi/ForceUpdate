@@ -1,14 +1,13 @@
-package com.android.forceupdate.ui
-
 import android.content.pm.PackageInstaller
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
 import com.android.forceupdate.common.DownloadStatus
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
+import com.android.forceupdate.ui.ForceUpdateViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -25,51 +24,57 @@ class ForceUpdateActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityForceUpdateBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
 
         requestUpdate()
     }
 
     private fun requestUpdate() {
-        binding.update.visibility = View.VISIBLE
-        binding.message.text = getString(R.string.forceupdate_update)
-        binding.progressBar.visibility = View.GONE
-        binding.downloaded.visibility = View.GONE
+        binding.apply {
+            update.visibility = View.VISIBLE
+            message.text = getString(R.string.forceupdate_update)
+            progressBar.visibility = View.GONE
+            downloaded.visibility = View.GONE
 
-        binding.title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
-        binding.message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
-        binding.update.text = getString(R.string.forceupdate_update)
-        if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0) {
-            binding.logo.visibility = View.VISIBLE
-            binding.logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
-        } else binding.logo.visibility = View.GONE
-        binding.applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME) ?: getString(R.string.forceupdate)
-        binding.update.setOnClickListener {
-            downloadApk()
+            title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
+            message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
+            update.text = getString(R.string.forceupdate_update)
+
+            if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0) {
+                logo.visibility = View.VISIBLE
+                logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
+            } else binding.logo.visibility = View.GONE
+
+            applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME) ?: getString(R.string.forceupdate)
+            update.setOnClickListener {
+                downloadApk()
+            }
         }
     }
 
     private fun downloadApk() {
-
         binding.update.visibility = View.GONE
         binding.message.text = getString(R.string.forceupdate_downloading)
         binding.progressBar.visibility = View.VISIBLE
         binding.downloaded.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.downloadApk(intent.getStringExtra(EXTRA_APK_LINK)!!).collect {
-                when (it) {
-                    DownloadStatus.DownloadCanceled -> {
-                        binding.message.text = getString(R.string.forceupdate_canceled)
-                        requestUpdate()
-                    }
-                    is DownloadStatus.DownloadCompleted -> {
-                        binding.message.text = getString(R.string.forceupdate_completed)
-                        installApk(it.localFile)
-                    }
-                    is DownloadStatus.DownloadingProgress -> {
-                        binding.progressBar.progress = it.progress
-                        binding.progressBar.max = 100
-                        binding.downloaded.text = getString(R.string.forceupdate_percentage, it.progress)
+            intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
+                viewModel.downloadApk(apkLink).collect {
+                    when (it) {
+                        DownloadStatus.DownloadCanceled -> {
+                            binding.message.text = getString(R.string.forceupdate_canceled)
+                            requestUpdate()
+                        }
+                        is DownloadStatus.DownloadCompleted -> {
+                            binding.message.text = getString(R.string.forceupdate_completed)
+                            installApk(it.localFile)
+                        }
+                        is DownloadStatus.DownloadingProgress -> {
+                            binding.progressBar.progress = it.progress
+                            binding.progressBar.max = 100
+                            binding.downloaded.text = getString(R.string.forceupdate_percentage, it.progress)
+                        }
                     }
                 }
             }
