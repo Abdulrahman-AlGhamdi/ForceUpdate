@@ -1,13 +1,14 @@
-import android.content.pm.PackageInstaller
+package com.android.forceupdate.ui
+
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
-import com.android.forceupdate.common.DownloadStatus
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
-import com.android.forceupdate.ui.ForceUpdateViewModel
+import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
+import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.InstallStatus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -62,15 +63,15 @@ class ForceUpdateActivity : AppCompatActivity() {
             intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
                 viewModel.downloadApk(apkLink).collect {
                     when (it) {
-                        DownloadStatus.DownloadCanceled -> {
+                        DownloadCanceled -> {
                             binding.message.text = getString(R.string.forceupdate_canceled)
                             requestUpdate()
                         }
-                        is DownloadStatus.DownloadCompleted -> {
+                        is DownloadCompleted -> {
                             binding.message.text = getString(R.string.forceupdate_completed)
                             installApk(it.localFile)
                         }
-                        is DownloadStatus.DownloadingProgress -> {
+                        is DownloadProgress -> {
                             binding.progressBar.progress = it.progress
                             binding.progressBar.max = 100
                             binding.downloaded.text = getString(R.string.forceupdate_percentage, it.progress)
@@ -82,25 +83,16 @@ class ForceUpdateActivity : AppCompatActivity() {
     }
 
     private fun installApk(localFile: File) {
-        val packageInstaller = viewModel.installApk(localFile)
-
-        packageInstaller.registerSessionCallback(object : PackageInstaller.SessionCallback() {
-            override fun onCreated(sessionId: Int) {
+        lifecycleScope.launchWhenStarted {
+            viewModel.installApk(localFile).collect {
+                if (it is InstallStatus.InstallFinished) {
+                    if (it.isSuccess) {
+                        localFile.delete()
+                        finish()
+                    } else requestUpdate()
+                }
             }
-            override fun onBadgingChanged(sessionId: Int) {
-            }
-            override fun onActiveChanged(id: Int, active: Boolean) {
-            }
-            override fun onProgressChanged(sessionId: Int, progress: Float) {
-                ((progress / 0.90000004) * 100).toInt()
-            }
-            override fun onFinished(id: Int, success: Boolean) {
-                if (success) {
-                    localFile.delete()
-                    finish()
-                } else requestUpdate()
-            }
-        })
+        }
     }
 
     override fun onBackPressed() {}

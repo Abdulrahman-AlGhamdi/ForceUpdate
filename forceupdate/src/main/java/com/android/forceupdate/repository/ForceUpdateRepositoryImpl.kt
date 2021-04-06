@@ -8,10 +8,10 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.net.Uri
 import androidx.core.content.FileProvider
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.android.forceupdate.common.DownloadStatus
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import java.io.File
 
@@ -49,7 +49,7 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
                     val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
 
                     withContext(Dispatchers.Main) {
-                        this@flow.emit(DownloadStatus.DownloadingProgress(percentage))
+                        this@flow.emit(DownloadStatus.DownloadProgress(percentage))
                     }
 
                     if (status == DownloadManager.STATUS_SUCCESSFUL) {
@@ -71,7 +71,13 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
         }
     }
 
-    override fun installApk(localFile: File): PackageInstaller {
+    sealed class DownloadStatus {
+        data class DownloadProgress(val progress: Int) : DownloadStatus()
+        data class DownloadCompleted(val localFile: File) : DownloadStatus()
+        object DownloadCanceled : DownloadStatus()
+    }
+
+    override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
         val contentUri = FileProvider.getUriForFile(application, application.packageName, localFile)
         val packageInstaller = application.packageManager.packageInstaller
         val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
@@ -91,7 +97,28 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
         session.abandon()
         session.close()
 
-        return packageInstaller
+        packageInstaller.registerSessionCallback(object : PackageInstaller.SessionCallback() {
+            override fun onCreated(sessionId: Int) {
+            }
+            override fun onBadgingChanged(sessionId: Int) {
+            }
+            override fun onActiveChanged(id: Int, active: Boolean) {
+            }
+            override fun onProgressChanged(sessionId: Int, progress: Float) {
+                val installProgress = ((progress / 0.90000004) * 100).toInt()
+                sendBlocking(InstallStatus.InstallProgress(installProgress))
+            }
+            override fun onFinished(id: Int, success: Boolean) {
+                sendBlocking(InstallStatus.InstallFinished(success))
+            }
+        })
+
+        awaitClose()
+    }
+
+    sealed class InstallStatus {
+        data class InstallProgress(val progress: Int) : InstallStatus()
+        data class InstallFinished(val isSuccess: Boolean) : InstallStatus()
     }
 
     companion object {
