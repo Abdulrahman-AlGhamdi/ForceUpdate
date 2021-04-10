@@ -9,6 +9,8 @@
 
         <activity android:name=".ui.ForceUpdateActivity" />
 
+        <receiver android:name=".broadcast.InstallBroadcastReceiver" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.ss.forceupdate"
