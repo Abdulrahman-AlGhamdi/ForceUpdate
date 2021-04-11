@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.Intent.EXTRA_INTENT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageInstaller.*
-import android.util.Log
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.Companion.LOCAL_FILE
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,11 +14,11 @@ import java.io.File
 class InstallBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val localFile = intent.getSerializableExtra(LOCAL_FILE) as File?
+        val localFile = intent.getSerializableExtra(LOCAL_FILE) as? File
 
         when (intent.getIntExtra(EXTRA_STATUS, -1)) {
             STATUS_PENDING_USER_ACTION -> {
-                val installIntent = intent.getParcelableExtra(EXTRA_INTENT) as Intent?
+                val installIntent = intent.getParcelableExtra(EXTRA_INTENT) as? Intent
                 context.startActivity(installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK))
             }
             STATUS_SUCCESS -> {
