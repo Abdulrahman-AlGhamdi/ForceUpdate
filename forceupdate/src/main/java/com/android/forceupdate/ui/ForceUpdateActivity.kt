@@ -63,7 +63,6 @@ class ForceUpdateActivity : AppCompatActivity() {
 
     private fun downloadApk() {
         binding.update.visibility = View.GONE
-        binding.message.text = getString(R.string.forceupdate_downloading)
         binding.progressBar.visibility = View.VISIBLE
         binding.downloaded.visibility = View.VISIBLE
 
@@ -80,6 +79,7 @@ class ForceUpdateActivity : AppCompatActivity() {
                             installApk(it.localFile)
                         }
                         is DownloadProgress -> {
+                            binding.message.text = getString(R.string.forceupdate_downloading)
                             binding.progressBar.progress = it.progress
                             binding.progressBar.max = 100
                             binding.downloaded.text = getString(R.string.forceupdate_download_percentage, it.progress)
@@ -102,7 +102,14 @@ class ForceUpdateActivity : AppCompatActivity() {
                         requestUpdate()
                     }
                     InstallSucceeded -> {
+                        binding.message.text = getString(R.string.forceupdate_completed)
                         finish()
+                    }
+                    is InstallProgress -> {
+                        binding.message.text = getString(R.string.forceupdate_installing)
+                        binding.progressBar.progress = it.progress
+                        binding.progressBar.max = 100
+                        binding.downloaded.text = getString(R.string.forceupdate_download_percentage, it.progress)
                     }
                 }
             }

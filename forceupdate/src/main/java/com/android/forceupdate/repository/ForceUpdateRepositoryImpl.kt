@@ -8,13 +8,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller.*
 import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.ResultReceiver
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.*
+import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import java.io.File
 
@@ -80,7 +87,7 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
         object DownloadCanceled : DownloadStatus()
     }
 
-    override fun installApk(localFile: File): Flow<InstallStatus> {
+    override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
         val contentUri = FileProvider.getUriForFile(application, application.packageName, localFile)
         val packageInstaller = application.packageManager.packageInstaller
         val contentResolver = application.contentResolver
@@ -96,20 +103,49 @@ class ForceUpdateRepositoryImpl(private val application: Application) : ForceUpd
                 session.fsync(sessionStream)
             }
 
+            val resultReceiver = object : ResultReceiver(Handler(Looper.getMainLooper())) {
+                override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
+                    super.onReceiveResult(resultCode, resultData)
+
+                    resultData.getParcelable<InstallStatus>(EXTRA_BUNDLE)?.let { installStatus ->
+                        sendBlocking(installStatus)
+                    }
+                }
+            }
+
             val intent = Intent(application, InstallBroadcastReceiver::class.java).apply {
-                this.putExtra(LOCAL_FILE, localFile)
+                this.putExtra(EXTRA_BUNDLE, Bundle().apply {
+                    this.putParcelable(RESULT_RECEIVER, resultReceiver)
+                    this.putSerializable(LOCAL_FILE, localFile)
+                })
             }
 
             val pendingIntent = getBroadcast(application, 2, intent, FLAG_UPDATE_CURRENT)
             session.commit(pendingIntent.intentSender)
             session.close()
-        }
 
-        return InstallBroadcastReceiver.installStatus
+            packageInstaller.registerSessionCallback(object : SessionCallback() {
+                override fun onCreated(sessionId: Int) {
+                }
+                override fun onBadgingChanged(sessionId: Int) {
+                }
+                override fun onActiveChanged(sessionId: Int, active: Boolean) {
+                }
+                override fun onProgressChanged(sessionId: Int, progress: Float) {
+                    sendBlocking(InstallProgress(((progress / 0.90000004) * 100).toInt()))
+                }
+                override fun onFinished(sessionId: Int, success: Boolean) {
+                }
+            })
+
+            awaitClose()
+        }
     }
 
     companion object {
         const val LOCAL_FILE = "Local File"
+        const val EXTRA_BUNDLE = "extra bundle"
+        const val RESULT_RECEIVER = "result receiver"
         private const val DOWNLOAD_ID_KEY = "Download"
         private const val DOWNLOAD_ID_NAME = "Download ID"
     }
