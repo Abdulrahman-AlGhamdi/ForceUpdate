@@ -34,18 +34,25 @@ class ForceUpdateActivity : AppCompatActivity() {
     private fun requestUpdate() {
         binding.apply {
             update.visibility = View.VISIBLE
-            message.text = getString(R.string.forceupdate_update)
-            progressBar.visibility = View.GONE
             downloaded.visibility = View.GONE
+            progressBar.visibility = View.GONE
+            message.text = getString(R.string.forceupdate_update)
 
-            title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
-            message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
             update.text = getString(R.string.forceupdate_update)
+            message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
+            title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
 
-            if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0) {
-                logo.visibility = View.VISIBLE
+            if (intent.getStringExtra(EXTRA_VERSION_NAME) != null)
+                versionName.text = getString(R.string.forceupdate_version_name, intent.getStringExtra(EXTRA_VERSION_NAME))
+            else versionName.visibility = View.GONE
+
+            if (intent.getIntExtra(EXTRA_VERSION_CODE, 0) != 0)
+                versionCode.text = getString(R.string.forceupdate_version_code, intent.getIntExtra(EXTRA_VERSION_CODE, 0))
+            else versionCode.visibility = View.GONE
+
+            if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0)
                 logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
-            } else binding.logo.visibility = View.GONE
+            else logo.visibility = View.GONE
 
             applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME) ?: getString(R.string.forceupdate)
             update.setOnClickListener {
@@ -75,7 +82,7 @@ class ForceUpdateActivity : AppCompatActivity() {
                         is DownloadProgress -> {
                             binding.progressBar.progress = it.progress
                             binding.progressBar.max = 100
-                            binding.downloaded.text = getString(R.string.forceupdate_percentage, it.progress)
+                            binding.downloaded.text = getString(R.string.forceupdate_download_percentage, it.progress)
                         }
                     }
                 }
@@ -109,6 +116,8 @@ class ForceUpdateActivity : AppCompatActivity() {
         const val EXTRA_MESSAGE = "message"
         const val EXTRA_APK_LINK = "link"
         const val EXTRA_LOGO_IMAGE = "logo"
+        const val EXTRA_VERSION_NAME = "version name"
+        const val EXTRA_VERSION_CODE = "version code"
         const val EXTRA_APPLICATION_NAME = "application name"
     }
 }
