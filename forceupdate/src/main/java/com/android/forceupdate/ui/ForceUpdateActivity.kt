@@ -6,9 +6,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
+import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
-import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.InstallStatus
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -85,11 +86,17 @@ class ForceUpdateActivity : AppCompatActivity() {
     private fun installApk(localFile: File) {
         lifecycleScope.launchWhenStarted {
             viewModel.installApk(localFile).collect {
-                if (it is InstallStatus.InstallFinished) {
-                    if (it.isSuccess) {
-                        localFile.delete()
+                when (it) {
+                    InstallCanceled -> {
+                        requestUpdate()
+                    }
+                    is InstallError -> {
+                        Snackbar.make(binding.root, it.message, Snackbar.LENGTH_SHORT).show()
+                        requestUpdate()
+                    }
+                    InstallSucceeded -> {
                         finish()
-                    } else requestUpdate()
+                    }
                 }
             }
         }

@@ -1,7 +1,7 @@
 package com.android.forceupdate.repository
 
+import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus
-import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.InstallStatus
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
