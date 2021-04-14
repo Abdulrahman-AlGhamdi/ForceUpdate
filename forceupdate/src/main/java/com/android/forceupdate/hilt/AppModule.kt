@@ -1,12 +1,12 @@
 package com.android.forceupdate.hilt
 
-import android.app.Application
+import android.content.Context
 import com.android.forceupdate.repository.ForceUpdateRepository
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ApplicationComponent
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -16,7 +16,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideForceUpdateImplementation(application: Application): ForceUpdateRepository {
-        return ForceUpdateRepositoryImpl(application)
+    fun provideForceUpdateImplementation(@ApplicationContext context: Context): ForceUpdateRepository {
+        return ForceUpdateRepositoryImpl(context)
     }
 }

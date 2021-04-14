@@ -37,6 +37,11 @@ class InstallBroadcastReceiver : BroadcastReceiver() {
                 bundle.putParcelable(EXTRA_BUNDLE, InstallCanceled)
                 resultReceiver?.send(1, bundle)
             }
+            STATUS_FAILURE_STORAGE -> {
+                localFile.delete()
+                bundle.putParcelable(EXTRA_BUNDLE, InstallError(STORAGE_FULL))
+                resultReceiver?.send(1, bundle)
+            }
             else -> {
                 localFile.delete()
                 intent.getStringExtra(EXTRA_STATUS_MESSAGE)?.let { message ->
@@ -52,5 +57,9 @@ class InstallBroadcastReceiver : BroadcastReceiver() {
         @Parcelize object InstallSucceeded : InstallStatus(), Parcelable
         @Parcelize data class InstallError(val message: String) : InstallStatus(), Parcelable
         @Parcelize data class InstallProgress(val progress: Int) : InstallStatus(), Parcelable
+    }
+
+    companion object {
+        private const val STORAGE_FULL = "Not enough storage, please erase some files"
     }
 }

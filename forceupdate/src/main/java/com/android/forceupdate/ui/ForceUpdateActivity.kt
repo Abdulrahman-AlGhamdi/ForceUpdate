@@ -8,6 +8,13 @@ import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_APK_LINK
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_APPLICATION_NAME
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_LOGO_IMAGE
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_MESSAGE
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_TITLE
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_VERSION_CODE
+import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_VERSION_NAME
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,10 +69,6 @@ class ForceUpdateActivity : AppCompatActivity() {
     }
 
     private fun downloadApk() {
-        binding.update.visibility = View.GONE
-        binding.progressBar.visibility = View.VISIBLE
-        binding.downloaded.visibility = View.VISIBLE
-
         lifecycleScope.launch(Dispatchers.Main) {
             intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
                 viewModel.downloadApk(apkLink).collect {
@@ -79,6 +82,9 @@ class ForceUpdateActivity : AppCompatActivity() {
                             installApk(it.localFile)
                         }
                         is DownloadProgress -> {
+                            binding.update.visibility = View.GONE
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.downloaded.visibility = View.VISIBLE
                             binding.message.text = getString(R.string.forceupdate_downloading)
                             binding.progressBar.progress = it.progress
                             binding.progressBar.max = 100
@@ -117,14 +123,4 @@ class ForceUpdateActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {}
-
-    companion object {
-        const val EXTRA_TITLE = "title"
-        const val EXTRA_MESSAGE = "message"
-        const val EXTRA_APK_LINK = "link"
-        const val EXTRA_LOGO_IMAGE = "logo"
-        const val EXTRA_VERSION_NAME = "version name"
-        const val EXTRA_VERSION_CODE = "version code"
-        const val EXTRA_APPLICATION_NAME = "application name"
-    }
 }
