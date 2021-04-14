@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @AndroidEntryPoint
-class ForceUpdateActivity : AppCompatActivity() {
+internal class ForceUpdateActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityForceUpdateBinding
     private val viewModel: ForceUpdateViewModel by viewModels()
