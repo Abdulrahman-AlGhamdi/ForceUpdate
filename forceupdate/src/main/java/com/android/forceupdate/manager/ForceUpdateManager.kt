@@ -3,13 +3,6 @@ package com.android.forceupdate.manager
 import android.app.Activity
 import android.content.Intent
 import com.android.forceupdate.ui.ForceUpdateActivity
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APK_LINK
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APPLICATION_NAME
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_LOGO_IMAGE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_MESSAGE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_TITLE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_CODE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_NAME
 import javax.inject.Singleton
 
 @Singleton
@@ -35,5 +28,15 @@ class ForceUpdateManager(
             this.putExtra(EXTRA_APPLICATION_NAME, applicationName)
         }
         activity.startActivity(intent)
+    }
+
+    companion object {
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_APK_LINK = "link"
+        const val EXTRA_MESSAGE = "message"
+        const val EXTRA_LOGO_IMAGE = "logo"
+        const val EXTRA_VERSION_NAME = "version name"
+        const val EXTRA_VERSION_CODE = "version code"
+        const val EXTRA_APPLICATION_NAME = "application name"
     }
 }
