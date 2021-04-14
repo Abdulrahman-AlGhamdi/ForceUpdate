@@ -7,7 +7,7 @@ import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
-class ForceUpdateViewModel @Inject constructor(
+internal class ForceUpdateViewModel @Inject constructor(
     private val forceUpdateRepository: ForceUpdateRepository
 ) : ViewModel() {
 

@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import java.io.File
 
-class ForceUpdateRepositoryImpl(private val context: Context) : ForceUpdateRepository {
+internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUpdateRepository {
 
     override suspend fun downloadApk(apkLink: String) = flow {
         val request = Request(Uri.parse(apkLink)).apply {

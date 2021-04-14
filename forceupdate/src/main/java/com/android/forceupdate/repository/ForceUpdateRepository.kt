@@ -5,7 +5,7 @@ import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStat
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
-interface ForceUpdateRepository {
+internal interface ForceUpdateRepository {
 
     suspend fun downloadApk(apkLink: String): Flow<DownloadStatus>
 

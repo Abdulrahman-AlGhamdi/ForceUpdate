@@ -15,7 +15,7 @@ import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.Companion.RE
 import kotlinx.parcelize.Parcelize
 import java.io.File
 
-class InstallBroadcastReceiver : BroadcastReceiver() {
+internal class InstallBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val bundle = intent.getBundleExtra(EXTRA_BUNDLE)
