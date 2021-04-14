@@ -13,7 +13,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.ss.forceupdate"
+            android:authorities="${applicationId}"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
