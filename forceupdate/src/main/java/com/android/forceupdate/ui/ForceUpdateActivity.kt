@@ -11,8 +11,6 @@ import com.android.forceupdate.databinding.ActivityForceUpdateBinding
 import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_APK_LINK
 import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_APPLICATION_NAME
 import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_LOGO_IMAGE
-import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_MESSAGE
-import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_TITLE
 import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_VERSION_CODE
 import com.android.forceupdate.manager.ForceUpdateManager.Companion.EXTRA_VERSION_NAME
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
@@ -46,8 +44,7 @@ class ForceUpdateActivity : AppCompatActivity() {
             message.text = getString(R.string.forceupdate_update)
 
             update.text = getString(R.string.forceupdate_update)
-            message.text = intent.getStringExtra(EXTRA_MESSAGE) ?: getString(R.string.forceupdate)
-            title.text = intent.getStringExtra(EXTRA_TITLE) ?: getString(R.string.forceupdate_new_update)
+            title.text = getString(R.string.forceupdate_new_update)
 
             if (intent.getStringExtra(EXTRA_VERSION_NAME) != null)
                 versionName.text = getString(R.string.forceupdate_version_name, intent.getStringExtra(EXTRA_VERSION_NAME))
@@ -61,7 +58,15 @@ class ForceUpdateActivity : AppCompatActivity() {
                 logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
             else logo.visibility = View.GONE
 
-            applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME) ?: getString(R.string.forceupdate)
+            if (intent.getStringExtra(EXTRA_APPLICATION_NAME) != null) {
+                val name = intent.getStringExtra(EXTRA_APPLICATION_NAME)
+                message.text = getString(R.string.forceupdate_update_message_name, name)
+                applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME)
+            } else {
+                message.text = getString(R.string.forceupdate_update_message)
+                applicationName.text = getString(R.string.forceupdate_new_update)
+            }
+
             update.setOnClickListener {
                 downloadApk()
             }
