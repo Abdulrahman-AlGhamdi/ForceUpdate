@@ -11,4 +11,5 @@
     <string name="forceupdate_version_code">Version Code: %1$d</string>
     <string name="forceupdate_version_name">Version Name: %1$s</string>
     <string name="forceupdate_update_message">Dear user, a new update has been released.</string>
+    <string name="forceupdate_update_message_name">Dear user, a new %1$s update has been released.</string>
 </resources>
