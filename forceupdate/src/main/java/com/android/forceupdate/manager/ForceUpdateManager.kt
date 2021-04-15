@@ -15,7 +15,7 @@ class ForceUpdateManager(
     private val applicationName: String? = null
 ) {
 
-    fun isApplicationUpdated() {
+    fun updateApplication() {
         val intent = Intent(activity, ForceUpdateActivity::class.java).apply {
             this.putExtra(EXTRA_LOGO_IMAGE, logo)
             this.putExtra(EXTRA_APK_LINK, apkLink)
