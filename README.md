@@ -32,6 +32,7 @@ ForceUpdateManager(
 ```
 
 Finally, if you want to customize the force update design you can add:
+
     * Application Logo
     * Version Code
     * Version Name
@@ -51,7 +52,7 @@ ForceUpdateManager(
 ## License
 
 ```
-Copyright 2021 Abdulrahman-AlGhamdi
+Copyright 2021 Abdulrahman AlGhamdi
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
