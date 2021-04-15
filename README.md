@@ -1,6 +1,6 @@
 # ForceUpdate
 
-Help the user to implement the force update of the application by just providing the APK link needed.
+![Minimum API level](https://img.shields.io/badge/API-23+) Help the user to implement the force update of the application by just providing the APK link needed.
 
 ## Installation
 
@@ -13,9 +13,9 @@ allprojects {
     }
 }
 ```
-### Dependency
+### Dependency ![GitHub Release (latest by date)](https://img.shields.io/github/v/release/Abdulrahman-AlGhamdi/ForceUpdate)
 ```groovy
-implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:0.1.3'
+implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
 ```
 
 ## Usage
@@ -33,10 +33,10 @@ ForceUpdateManager(
 
 Finally, if you want to customize the force update design you can add:
 
-    * Application Logo
-    * Version Code
-    * Version Name
-    * Application Name
+   * Application Logo
+   * Version Code
+   * Version Name
+   * Application Name
 
 ```kotlin
 ForceUpdateManager(
