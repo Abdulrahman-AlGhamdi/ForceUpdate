@@ -1,6 +1,7 @@
 # ForceUpdate
 
-![Minimum API level](https://img.shields.io/badge/API-23+-yellow) Help the user to implement the force update of the application by just providing the APK link needed.
+![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
+Help the user to implement the force update of the application by just providing the APK link needed.
 
 ## Installation
 
@@ -13,7 +14,7 @@ allprojects {
     }
 }
 ```
-### Dependency ![GitHub release (latest by date)](https://img.shields.io/github/v/release/kaushiknsanji/StoreApp)
+### Dependency
 ```groovy
 implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
 ```
