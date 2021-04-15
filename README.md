@@ -1,6 +1,7 @@
 # ForceUpdate
 
 ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
+
 Help the user to implement the force update of the application by just providing the APK link needed.
 
 ## Installation
