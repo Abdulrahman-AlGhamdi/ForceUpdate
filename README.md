@@ -17,7 +17,7 @@ allprojects {
 ```
 ### Dependency
 ```groovy
-implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
+implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:0.1.3'
 ```
 
 ## Usage
