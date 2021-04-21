@@ -4,9 +4,17 @@
 
 Help the user to implement the force update of the application by just providing the APK link needed.
 
-## Installation
+## Notice
 
-### Repositories [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+If you are using Dependency Injection make sure to add this in the Manafiest file :
+
+```xml
+<application tools:replace="android:name" />
+```
+
+## Installation [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+
+### Repositories
 
 ```groovy
 allprojects {
