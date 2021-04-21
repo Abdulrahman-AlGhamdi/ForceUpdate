@@ -1,4 +1,4 @@
-# Force Update
+# ForceUpdate
 
 ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
 
@@ -15,43 +15,22 @@ allprojects {
     }
 }
 ```
-### Dependency [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+### Dependency
 ```groovy
-implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
+implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:0.1.3'
 ```
 
 ## Usage
 
-* First  : 
-    * call `ForceUpdateManager` helper class
-    * In the constructor you must provide an Activity reference
+* First  : call `ForceUpdateManager` helper class
+* Second : in the constructor you must provide the Activity and APK_LINK
+* Third  : call `updateApplication` to start force update process
 
 ```kotlin
-val forceUpdateManager = ForceUpdateManager(activity = this)
-```
-
-* Second : 
-    * check the update version with current application version by using `checkAppVersion` function
-    * In the constructor provide the new application update version
-    * The Function will return true or false and that indicate whether you need to update the application or not
-
-```kotlin
-forceUpdateManager.checkAppVersion(updateVersion = 2)
-```
-
-* Third  : 
-    * call `updateApplication` to start force update process
-    * In the constructor provide the APK link
-
-```kotlin
-forceUpdateManager.updateApplication(apkLink = "APK_LINK")
-```
-
-* Fourth :
-    * If you need to destroy the application by clearing its data call `destroyApplication`
-
-```kotlin
-forceUpdateManager.destroyApplication()
+ForceUpdateManager(
+    activity = this,
+    apkLink = "APK_LINK"
+).updateApplication()
 ```
 
 Finally, if you want to customize the force update design you can add:
@@ -62,6 +41,7 @@ Finally, if you want to customize the force update design you can add:
 
 ```kotlin
 ForceUpdateManager(
+    activity = this,
     apkLink = "APK_LINK",
     logo = R.drawable.application_logo,
     versionCode = BuildConfig.VERSION_CODE,
