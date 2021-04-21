@@ -20,7 +20,6 @@ import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import java.io.File
@@ -107,9 +106,10 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
         val resultReceiver = object : ResultReceiver(Handler(Looper.getMainLooper())) {
             override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
                 super.onReceiveResult(resultCode, resultData)
+                super.onReceiveResult(resultCode, resultData)
 
                 resultData.getParcelable<InstallStatus>(EXTRA_BUNDLE)?.let { installStatus ->
-                    sendBlocking(installStatus)
+                    offer(installStatus)
                 }
             }
         }
@@ -146,7 +146,7 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
             override fun onActiveChanged(sessionId: Int, active: Boolean) {
             }
             override fun onProgressChanged(sessionId: Int, progress: Float) {
-                sendBlocking(InstallProgress(((progress / 0.90000004) * 100).toInt()))
+                offer(InstallProgress(((progress / 0.90000004) * 100).toInt()))
             }
             override fun onFinished(sessionId: Int, success: Boolean) {
             }
