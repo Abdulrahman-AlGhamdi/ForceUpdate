@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.android.forceupdate">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <application android:name=".ForceUpdateApplication">
+    <application
+        android:name=".ForceUpdateApplication"
+        tools:replace="android:name">
 
         <activity android:name=".ui.ForceUpdateActivity" />
 
