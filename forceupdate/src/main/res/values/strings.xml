@@ -2,6 +2,7 @@
     <!-- Force Update Activity Strings -->
     <string name="forceupdate">Force Update</string>
     <string name="forceupdate_update">Update</string>
+    <string name="forceupdate_dialog_confirm">OK</string>
     <string name="forceupdate_canceled">Canceled</string>
     <string name="forceupdate_completed">Completed</string>
     <string name="forceupdate_new_update">New Update</string>
@@ -12,4 +13,5 @@
     <string name="forceupdate_version_name">Version Name: %1$s</string>
     <string name="forceupdate_update_message">Dear user, a new update has been released.</string>
     <string name="forceupdate_update_message_name">Dear user, a new %1$s update has been released.</string>
+    <string name="forceupdate_dialog_message">An error was encountered while checking your credentials.</string>
 </resources>
