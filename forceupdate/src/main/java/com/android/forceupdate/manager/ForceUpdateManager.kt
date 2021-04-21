@@ -39,9 +39,9 @@ class ForceUpdateManager(private val activity: Activity) {
         activity.startActivity(intent)
     }
 
-    fun destroyApplication(message: String? = null) {
+    private fun destroyApplication() {
         AlertDialog.Builder(activity).apply {
-            this.setTitle(message ?: activity.getString(R.string.forceupdate_dialog_message))
+            this.setTitle(activity.getString(R.string.forceupdate_dialog_message))
             this.setCancelable(false)
             this.setPositiveButton(activity.getString(R.string.forceupdate_dialog_confirm), null)
             this.create()

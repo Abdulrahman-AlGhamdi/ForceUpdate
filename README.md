@@ -6,7 +6,7 @@ Help the user to implement the force update of the application by just providing
 
 ## Installation
 
-### Repositories [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+### Repositories
 
 ```groovy
 allprojects {
@@ -15,7 +15,7 @@ allprojects {
     }
 }
 ```
-### Dependency
+### Dependency [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
 ```groovy
 implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
 ```
@@ -47,38 +47,33 @@ forceUpdateManager.checkAppVersion(updateVersion = 2)
 forceUpdateManager.updateApplication(apkLink = "APK_LINK")
 ```
 
-Do you want to customize the force update design? you can add :
+* Fourth :
+    * If you need to destroy the application by clearing its data call `destroyApplication`
+
+```kotlin
+forceUpdateManager.destroyApplication()
+```
+
+Finally, if you want to customize the force update design you can add:
    * Application Logo
    * Version Code
    * Version Name
    * Application Name
 
 ```kotlin
-forceUpdateManager.updateApplication(
+ForceUpdateManager(
     apkLink = "APK_LINK",
     logo = R.drawable.application_logo,
     versionCode = BuildConfig.VERSION_CODE,
     versionName = BuildConfig.VERSION_NAME,
     applicationName = getString(R.string.app_name)
-)
-```
-
-* Fourth :
-    * If you need to destroy the application by clearing its data call `destroyApplication`
-    * also you can provide custom `message` in the function constructor
-
-```kotlin
-forceUpdateManager.destroyApplication()
-```
-or
-```kotlin
-forceUpdateManager.destroyApplication("MESSAGE")
+).isApplicationUpdated()
 ```
 
 ## License
 
 ```
-Copyright 2021 Abdulrahman Al-Ghamdi
+Copyright 2021 Abdulrahman AlGhamdi
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
