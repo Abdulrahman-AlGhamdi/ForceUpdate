@@ -99,7 +99,7 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
     }
 
     override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
-        val contentUri = FileProvider.getUriForFile(context, context.packageName, localFile)
+        val contentUri = FileProvider.getUriForFile(context, context.packageName + ".FileProvider", localFile)
         val packageInstaller = context.packageManager.packageInstaller
         val contentResolver = context.contentResolver
 
