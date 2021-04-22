@@ -6,10 +6,18 @@ Help the user to implement the force update of the application by just providing
 
 ## Notice
 
-If you are using Dependency Injection make sure to add this in the Manafiest file :
+If you are using one of these below please make sure to add this in the Mangiest file :
+
+* Dependency Injection
 
 ```xml
 <application tools:replace="android:name" />
+```
+
+* File Provider
+
+```xml
+<provider tools:replace="android:authorities" />
 ```
 
 ## Installation [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
@@ -25,7 +33,7 @@ allprojects {
 ```
 ### Dependency
 ```groovy
-implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:TAG'
+implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:tag'
 ```
 
 ## Usage
@@ -73,14 +81,14 @@ forceUpdateManager.updateApplication(
 
 * Fourth :
     * If you need to destroy the application by clearing its data call `destroyApplication`
-    * also you can provide custom `message` in the function constructor
+    * also you can provide custom message in the function constructor
 
 ```kotlin
 forceUpdateManager.destroyApplication()
 ```
 or
 ```kotlin
-forceUpdateManager.destroyApplication("MESSAGE")
+forceUpdateManager.destroyApplication(dialogMessage = "MESSAGE")
 ```
 
 ## License

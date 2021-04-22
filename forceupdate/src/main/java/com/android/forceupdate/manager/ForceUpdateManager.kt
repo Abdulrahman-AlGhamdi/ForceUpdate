@@ -9,6 +9,11 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APK_LINK
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APPLICATION_NAME
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_LOGO_IMAGE
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_CODE
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_NAME
 import javax.inject.Singleton
 
 @Singleton
@@ -39,9 +44,9 @@ class ForceUpdateManager(private val activity: Activity) {
         activity.startActivity(intent)
     }
 
-    fun destroyApplication(message: String? = null) {
+    fun destroyApplication(dialogMessage: String? = null) {
         AlertDialog.Builder(activity).apply {
-            this.setTitle(message ?: activity.getString(R.string.forceupdate_dialog_message))
+            this.setTitle(dialogMessage ?: activity.getString(R.string.forceupdate_dialog_message))
             this.setCancelable(false)
             this.setPositiveButton(activity.getString(R.string.forceupdate_dialog_confirm), null)
             this.create()
@@ -51,13 +56,5 @@ class ForceUpdateManager(private val activity: Activity) {
                 activityManager.clearApplicationUserData()
             }
         }
-    }
-
-    companion object {
-        const val EXTRA_APK_LINK = "link"
-        const val EXTRA_LOGO_IMAGE = "logo"
-        const val EXTRA_VERSION_NAME = "version name"
-        const val EXTRA_VERSION_CODE = "version code"
-        const val EXTRA_APPLICATION_NAME = "application name"
     }
 }
