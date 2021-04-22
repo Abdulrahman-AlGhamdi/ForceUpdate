@@ -2,25 +2,24 @@ package com.android.forceupdate.ui
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
+import com.android.forceupdate.repository.ForceUpdateRepositoryImpl
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
 
-@AndroidEntryPoint
 internal class ForceUpdateActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityForceUpdateBinding
-    private val viewModel: ForceUpdateViewModel by viewModels()
+    private lateinit var viewModel: ForceUpdateViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +27,13 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         setContentView(binding.root)
         supportActionBar?.hide()
 
+        init()
         requestUpdate()
+    }
+
+    fun init() {
+        val factory = ForceUpdateProviderFactory(ForceUpdateRepositoryImpl(this))
+        viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
     }
 
     private fun requestUpdate() {
