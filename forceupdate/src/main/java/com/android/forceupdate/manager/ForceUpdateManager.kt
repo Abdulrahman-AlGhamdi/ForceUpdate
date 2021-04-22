@@ -14,9 +14,7 @@ import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APPLICATIO
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_LOGO_IMAGE
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_CODE
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_NAME
-import javax.inject.Singleton
 
-@Singleton
 class ForceUpdateManager(private val activity: Activity) {
 
     fun checkAppVersion(updateVersion: Int): Boolean {
