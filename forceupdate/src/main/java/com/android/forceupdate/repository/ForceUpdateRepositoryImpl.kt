@@ -22,6 +22,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import java.io.File
 
 internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUpdateRepository {
@@ -46,51 +47,46 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
             this.apply()
         }
 
-        withContext(Dispatchers.IO) {
-            while (true) {
-                withContext(Dispatchers.Main) {
+        var isDownloading = true
+        while (isDownloading) {
+            val cursor = downloadManager.query(query)
+            if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
+                val bytes = cursor.getInt(cursor.getColumnIndex(COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                val totalSize = cursor.getInt(cursor.getColumnIndex(COLUMN_TOTAL_SIZE_BYTES))
+                val status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS))
+                val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
 
-                    val cursor = downloadManager.query(query)
-                    if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
+                if (status == STATUS_PENDING) {
+                }
 
-                        val bytes = cursor.getInt(cursor.getColumnIndex(COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                        val totalSize = cursor.getInt(cursor.getColumnIndex(COLUMN_TOTAL_SIZE_BYTES))
-                        val status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS))
-                        val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
+                if (status == STATUS_PAUSED) {
+                    this@flow.emit(DownloadCanceled)
+                    isDownloading = false
+                }
 
-                        if (status == STATUS_PENDING) {
-                        }
+                if (status == STATUS_FAILED) {
+                    this@flow.emit(DownloadCanceled)
+                    isDownloading = false
+                }
 
-                        if (status == STATUS_PAUSED) {
-                            this@flow.emit(DownloadCanceled)
-                            this.cancel()
-                        }
+                if (status == STATUS_RUNNING) {
+                    this@flow.emit(DownloadProgress(percentage))
+                }
 
-                        if (status == STATUS_FAILED) {
-                            this@flow.emit(DownloadCanceled)
-                            this.cancel()
-                        }
-
-                        if (status == STATUS_RUNNING) {
-                            this@flow.emit(DownloadProgress(percentage))
-                        }
-
-                        if (status == STATUS_SUCCESSFUL) {
-                            val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
-                            Uri.parse(uri).path?.let { path ->
-                                val file = File(path)
-                                this@flow.emit(DownloadCompleted(file))
-                                this.cancel()
-                            }
-                        }
-                    } else {
-                        this@flow.emit(DownloadCanceled)
-                        this.cancel()
+                if (status == STATUS_SUCCESSFUL) {
+                    val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
+                    Uri.parse(uri).path?.let { path ->
+                        val file = File(path)
+                        this@flow.emit(DownloadCompleted(file))
+                        isDownloading = false
                     }
                 }
+            } else {
+                this@flow.emit(DownloadCanceled)
+                isDownloading = false
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     sealed class DownloadStatus {
         data class DownloadProgress(val progress: Int) : DownloadStatus()
@@ -99,7 +95,7 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
     }
 
     override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
-        val contentUri = FileProvider.getUriForFile(context, context.packageName + ".FileProvider", localFile)
+        val contentUri = FileProvider.getUriForFile(context, context.packageName, localFile)
         val packageInstaller = context.packageManager.packageInstaller
         val contentResolver = context.contentResolver
 
@@ -141,13 +137,17 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
         packageInstaller.registerSessionCallback(object : SessionCallback() {
             override fun onCreated(sessionId: Int) {
             }
+
             override fun onBadgingChanged(sessionId: Int) {
             }
+
             override fun onActiveChanged(sessionId: Int, active: Boolean) {
             }
+
             override fun onProgressChanged(sessionId: Int, progress: Float) {
                 offer(InstallProgress(((progress / 0.90000004) * 100).toInt()))
             }
+
             override fun onFinished(sessionId: Int, success: Boolean) {
             }
         })
