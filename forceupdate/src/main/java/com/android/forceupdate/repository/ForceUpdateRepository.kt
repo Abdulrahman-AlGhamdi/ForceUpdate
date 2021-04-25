@@ -9,5 +9,7 @@ internal interface ForceUpdateRepository {
 
     suspend fun downloadApk(apkLink: String): Flow<DownloadStatus>
 
+    fun getLocalFile() : File
+
     fun installApk(localFile: File): Flow<InstallStatus>
 }
