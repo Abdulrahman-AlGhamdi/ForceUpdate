@@ -38,12 +38,11 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     private fun requestUpdate() {
         binding.apply {
-            update.visibility = View.VISIBLE
+            button.visibility = View.VISIBLE
             downloaded.visibility = View.GONE
             progressBar.visibility = View.GONE
             message.text = getString(R.string.forceupdate_update)
-
-            update.text = getString(R.string.forceupdate_update)
+            button.text = getString(R.string.forceupdate_update)
             title.text = getString(R.string.forceupdate_new_update)
 
             if (intent.getStringExtra(EXTRA_VERSION_NAME) != null)
@@ -67,7 +66,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                 applicationName.text = getString(R.string.forceupdate_new_update)
             }
 
-            update.setOnClickListener {
+            button.setOnClickListener {
                 downloadApk()
             }
         }
@@ -76,24 +75,28 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun downloadApk() {
         lifecycleScope.launch(Dispatchers.Main) {
             intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
-                viewModel.downloadApk(apkLink).collect {
-                    when (it) {
+                viewModel.downloadApk(apkLink).collect { downloadStatus ->
+                    when (downloadStatus) {
                         DownloadCanceled -> {
                             binding.message.text = getString(R.string.forceupdate_canceled)
                             requestUpdate()
                         }
                         is DownloadCompleted -> {
-                            binding.message.text = getString(R.string.forceupdate_completed)
-                            installApk(it.localFile)
+                            binding.button.visibility = View.VISIBLE
+                            binding.downloaded.visibility = View.GONE
+                            binding.progressBar.visibility = View.GONE
+                            binding.button.text = getString(R.string.forceupdate_install)
+                            binding.message.text = getString(R.string.forceupdate_download_completed)
+                            binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
                         }
                         is DownloadProgress -> {
-                            binding.update.visibility = View.GONE
+                            binding.button.visibility = View.GONE
                             binding.progressBar.visibility = View.VISIBLE
                             binding.downloaded.visibility = View.VISIBLE
                             binding.message.text = getString(R.string.forceupdate_downloading)
-                            binding.progressBar.progress = it.progress
+                            binding.progressBar.progress = downloadStatus.progress
                             binding.progressBar.max = 100
-                            binding.downloaded.text = getString(R.string.forceupdate_download_percentage, it.progress)
+                            binding.downloaded.text = getString(R.string.forceupdate_download_percentage, downloadStatus.progress)
                         }
                     }
                 }
@@ -106,21 +109,14 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             viewModel.installApk(localFile).collect {
                 when (it) {
                     InstallCanceled -> {
-                        requestUpdate()
+                        binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
                     }
                     is InstallError -> {
                         Snackbar.make(binding.root, it.message, Snackbar.LENGTH_SHORT).show()
-                        requestUpdate()
+                        binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
                     }
                     InstallSucceeded -> {
-                        binding.message.text = getString(R.string.forceupdate_completed)
                         finish()
-                    }
-                    is InstallProgress -> {
-                        binding.message.text = getString(R.string.forceupdate_installing)
-                        binding.progressBar.progress = it.progress
-                        binding.progressBar.max = 100
-                        binding.downloaded.text = getString(R.string.forceupdate_download_percentage, it.progress)
                     }
                 }
             }

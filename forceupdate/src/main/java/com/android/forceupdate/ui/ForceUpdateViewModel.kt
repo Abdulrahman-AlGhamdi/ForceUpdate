@@ -10,5 +10,7 @@ internal class ForceUpdateViewModel(
 
     suspend fun downloadApk(apkUrl: String) = forceUpdateRepository.downloadApk(apkUrl)
 
+    fun getLocalFile() = forceUpdateRepository.getLocalFile()
+
     fun installApk(localFile: File) = forceUpdateRepository.installApk(localFile)
 }
