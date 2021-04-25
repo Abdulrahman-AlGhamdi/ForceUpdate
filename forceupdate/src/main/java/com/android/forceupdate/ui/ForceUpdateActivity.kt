@@ -31,7 +31,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         requestUpdate()
     }
 
-    fun init() {
+    private fun init() {
         val factory = ForceUpdateProviderFactory(ForceUpdateRepositoryImpl(this))
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
     }
