@@ -1,23 +1,18 @@
-# Force Update
+# Force Update ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
 
-![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
-
-Help the user to implement the force update of the application by just providing the APK link needed.
+This library help the user to implement :
+1- Force updating the application by only providing only the APK link needed. 
+2- Check the application version with update version to see whether the application need to be updated or not.
+3- Delete application content by clearing all its data
 
 ## Notice
 
-If you are using one of these below please make sure to add this in the Mangiest file :
-
-* Dependency Injection
+If you are using `File Provider` please make sure to add this in the Mangiest file :
 
 ```xml
-<application tools:replace="android:name" />
-```
-
-* File Provider
-
-```xml
-<provider tools:replace="android:authorities" />
+<provider 
+    android:authorities="${applicationId}"
+    tools:replace="android:authorities" />
 ```
 
 ## Installation [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
