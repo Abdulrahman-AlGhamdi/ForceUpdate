@@ -10,6 +10,7 @@ import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl
 import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.DownloadStatus.*
+import com.android.forceupdate.ui.ForceUpdateActivity.ViewState.*
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -28,47 +29,38 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         init()
-        requestUpdate()
     }
 
     private fun init() {
         val factory = ForceUpdateProviderFactory(ForceUpdateRepositoryImpl(this))
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
+        if (viewModel.getLocalFile().exists()) customView(DOWNLOAD_COMPLETED) else customView(UPDATE_STATE)
     }
 
     private fun requestUpdate() {
-        binding.apply {
-            button.visibility = View.VISIBLE
-            downloaded.visibility = View.GONE
-            progressBar.visibility = View.GONE
-            message.text = getString(R.string.forceupdate_update)
-            button.text = getString(R.string.forceupdate_update)
-            title.text = getString(R.string.forceupdate_new_update)
+        if (intent.getStringExtra(EXTRA_VERSION_NAME) != null)
+            binding.versionName.text = getString(R.string.forceupdate_version_name, intent.getStringExtra(EXTRA_VERSION_NAME))
+        else binding.versionName.visibility = View.GONE
 
-            if (intent.getStringExtra(EXTRA_VERSION_NAME) != null)
-                versionName.text = getString(R.string.forceupdate_version_name, intent.getStringExtra(EXTRA_VERSION_NAME))
-            else versionName.visibility = View.GONE
+        if (intent.getIntExtra(EXTRA_VERSION_CODE, 0) != 0)
+            binding.versionCode.text = getString(R.string.forceupdate_version_code, intent.getIntExtra(EXTRA_VERSION_CODE, 0))
+        else binding.versionCode.visibility = View.GONE
 
-            if (intent.getIntExtra(EXTRA_VERSION_CODE, 0) != 0)
-                versionCode.text = getString(R.string.forceupdate_version_code, intent.getIntExtra(EXTRA_VERSION_CODE, 0))
-            else versionCode.visibility = View.GONE
+        if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0)
+            binding.logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
+        else binding.logo.visibility = View.GONE
 
-            if (intent.getIntExtra(EXTRA_LOGO_IMAGE, 0) != 0)
-                logo.setImageResource(intent.getIntExtra(EXTRA_LOGO_IMAGE, 0))
-            else logo.visibility = View.GONE
+        if (intent.getStringExtra(EXTRA_APPLICATION_NAME) != null) {
+            val name = intent.getStringExtra(EXTRA_APPLICATION_NAME)
+            binding.message.text = getString(R.string.forceupdate_update_message_name, name)
+            binding.applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME)
+        } else {
+            binding.message.text = getString(R.string.forceupdate_update_message)
+            binding.applicationName.text = getString(R.string.forceupdate_new_update)
+        }
 
-            if (intent.getStringExtra(EXTRA_APPLICATION_NAME) != null) {
-                val name = intent.getStringExtra(EXTRA_APPLICATION_NAME)
-                message.text = getString(R.string.forceupdate_update_message_name, name)
-                applicationName.text = intent.getStringExtra(EXTRA_APPLICATION_NAME)
-            } else {
-                message.text = getString(R.string.forceupdate_update_message)
-                applicationName.text = getString(R.string.forceupdate_new_update)
-            }
-
-            button.setOnClickListener {
+        binding.button.setOnClickListener {
                 downloadApk()
-            }
         }
     }
 
@@ -79,23 +71,14 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                     when (downloadStatus) {
                         DownloadCanceled -> {
                             binding.message.text = getString(R.string.forceupdate_canceled)
-                            requestUpdate()
+                            customView(UPDATE_STATE)
                         }
                         is DownloadCompleted -> {
-                            binding.button.visibility = View.VISIBLE
-                            binding.downloaded.visibility = View.GONE
-                            binding.progressBar.visibility = View.GONE
-                            binding.button.text = getString(R.string.forceupdate_install)
-                            binding.message.text = getString(R.string.forceupdate_download_completed)
-                            binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
+                            customView(DOWNLOAD_COMPLETED)
                         }
                         is DownloadProgress -> {
-                            binding.button.visibility = View.GONE
-                            binding.progressBar.visibility = View.VISIBLE
-                            binding.downloaded.visibility = View.VISIBLE
-                            binding.message.text = getString(R.string.forceupdate_downloading)
+                            customView(DOWNLOAD_PROGRESS)
                             binding.progressBar.progress = downloadStatus.progress
-                            binding.progressBar.max = 100
                             binding.downloaded.text = getString(R.string.forceupdate_download_percentage, downloadStatus.progress)
                         }
                     }
@@ -123,7 +106,42 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         }
     }
 
+    private fun customView(state: ViewState) {
+        when (state) {
+            UPDATE_STATE -> {
+                binding.button.visibility = View.VISIBLE
+                binding.downloaded.visibility = View.GONE
+                binding.progressBar.visibility = View.GONE
+                binding.button.text = getString(R.string.forceupdate_update)
+                binding.message.text = getString(R.string.forceupdate_update)
+                binding.title.text = getString(R.string.forceupdate_new_update)
+                requestUpdate()
+            }
+            DOWNLOAD_PROGRESS -> {
+                binding.button.visibility = View.GONE
+                binding.progressBar.visibility = View.VISIBLE
+                binding.downloaded.visibility = View.VISIBLE
+                binding.message.text = getString(R.string.forceupdate_downloading)
+                binding.progressBar.max = 100
+            }
+            DOWNLOAD_COMPLETED -> {
+                binding.button.visibility = View.VISIBLE
+                binding.downloaded.visibility = View.GONE
+                binding.progressBar.visibility = View.GONE
+                binding.button.text = getString(R.string.forceupdate_install)
+                binding.message.text = getString(R.string.forceupdate_download_completed)
+                binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
+            }
+        }
+    }
+
     override fun onBackPressed() {}
+
+    enum class ViewState {
+        UPDATE_STATE,
+        DOWNLOAD_PROGRESS,
+        DOWNLOAD_COMPLETED
+    }
 
     companion object {
         const val EXTRA_APK_LINK = "link"
