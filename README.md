@@ -1,10 +1,9 @@
 # Force Update ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
 
 This library help the user to implement :
-
-1- Force updating the application by only providing only the APK link needed. 
-2- Check the application version with update version to see whether the application need to be updated or not.
-3- Delete application content by clearing all its data
+* Force updating the application by only providing only the APK link needed. 
+* Check the application version with update version to see whether the application need to be updated or not.
+* Delete application content by clearing all its data
 
 ## Installation [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
 
