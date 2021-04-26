@@ -1,7 +1,7 @@
 # Force Update ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
 
-This library help the user to implement :
-* Force updating the application by only providing only the APK link needed. 
+This library helps the user to implement :
+* Force updating the application by only providing the APK link needed. 
 * Check the application version with update version to see whether the application need to be updated or not.
 * Delete application content by clearing all its data
 
@@ -46,22 +46,6 @@ forceUpdateManager.checkAppVersion(updateVersion = 2)
 
 ```kotlin
 forceUpdateManager.updateApplication(apkLink = "APK_LINK")
-```
-
-Do you want to customize the force update design? you can add :
-   * Application Logo
-   * Version Code
-   * Version Name
-   * Application Name
-
-```kotlin
-forceUpdateManager.updateApplication(
-    apkLink = "APK_LINK",
-    logo = R.drawable.application_logo,
-    versionCode = BuildConfig.VERSION_CODE,
-    versionName = BuildConfig.VERSION_NAME,
-    applicationName = getString(R.string.app_name)
-)
 ```
 
 * Fourth :
