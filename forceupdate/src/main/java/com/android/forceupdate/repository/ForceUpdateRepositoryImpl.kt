@@ -12,7 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
-import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.*
@@ -69,6 +69,14 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
                         this@flow.emit(DownloadProgress(percentage))
                     }
                     STATUS_SUCCESSFUL -> {
+                        val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
+                        Uri.parse(uri).path?.let { externalPath ->
+                            val file = File(externalPath)
+                            val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
+                            outputStream.write(file.readBytes())
+                            outputStream.close()
+                            file.delete()
+                        }
                         this@flow.emit(DownloadCompleted)
                         isDownloading = false
                     }
@@ -80,7 +88,7 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun getLocalFile() = File(context.getExternalFilesDir(APK_FILE_NAME)?.path ?: "")
+    override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
 
     sealed class DownloadStatus {
         data class DownloadProgress(val progress: Int) : DownloadStatus()
@@ -89,7 +97,6 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
     }
 
     override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
-        val contentUri = FileProvider.getUriForFile(context, context.packageName, localFile)
         val packageInstaller = context.packageManager.packageInstaller
         val contentResolver = context.contentResolver
 
@@ -111,8 +118,8 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
             })
         }
 
-        contentResolver.openInputStream(contentUri)?.use { apkStream ->
-            val length = DocumentFile.fromSingleUri(context, contentUri)?.length() ?: -1
+        contentResolver.openInputStream(localFile.toUri())?.use { apkStream ->
+            val length = DocumentFile.fromSingleUri(context, localFile.toUri())?.length() ?: -1
             val sessionParams = SessionParams(SessionParams.MODE_FULL_INSTALL)
             val sessionId = packageInstaller.createSession(sessionParams)
             val session = packageInstaller.openSession(sessionId)
