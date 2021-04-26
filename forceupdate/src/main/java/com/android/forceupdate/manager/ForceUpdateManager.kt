@@ -10,36 +10,23 @@ import android.os.Build.VERSION_CODES.P
 import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APK_LINK
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APPLICATION_NAME
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_LOGO_IMAGE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_CODE
-import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_VERSION_NAME
 
 class ForceUpdateManager(private val activity: Activity) {
 
     fun checkAppVersion(updateVersion: Int): Boolean {
         val packageInfo = activity.packageManager.getPackageInfo(activity.packageName, 0)
+
         return if (SDK_INT >= P)
             updateVersion > packageInfo.longVersionCode
         else
             updateVersion > packageInfo.versionCode
     }
 
-    fun updateApplication(
-        apkLink: String,
-        logo: Int? = null,
-        versionCode: Int? = null,
-        versionName: String? = null,
-        applicationName: String? = null
-    ) {
+    fun updateApplication(apkLink: String) {
         val intent = Intent(activity, ForceUpdateActivity::class.java).apply {
-            this.putExtra(EXTRA_LOGO_IMAGE, logo)
             this.putExtra(EXTRA_APK_LINK, apkLink)
-            this.putExtra(EXTRA_VERSION_CODE, versionCode)
-            this.putExtra(EXTRA_VERSION_NAME, versionName)
-            this.putExtra(EXTRA_APPLICATION_NAME, applicationName)
+            activity.startActivity(this)
         }
-        activity.startActivity(intent)
     }
 
     fun destroyApplication(dialogMessage: String? = null) {
