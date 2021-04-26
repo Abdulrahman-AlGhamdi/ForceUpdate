@@ -47,7 +47,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
         binding.currentVersion.text = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
 
-        val applicationLogo = packageManager.getApplicationLogo(packageInfo.applicationInfo)
+        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
         binding.logo.setImageDrawable(applicationLogo)
 
         val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
