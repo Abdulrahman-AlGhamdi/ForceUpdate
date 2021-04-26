@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- force update activity strings -->
-    <string name="forceupdate">Force Update</string>
     <string name="forceupdate_update">تحديث</string>
     <string name="forceupdate_install">تثبيت</string>
     <string name="forceupdate_dialog_confirm">موافق</string>
     <string name="forceupdate_new_update">تحديث جديد</string>
-    <string name="forceupdate_installing">جاري التثبيت…</string>
     <string name="forceupdate_downloading">جاري التحميل…</string>
     <string name="forceupdate_canceled">تم إلغاء التحميل</string>
     <string name="forceupdate_download_percentage">%1$d%%</string>
-    <string name="forceupdate_version_code">رقم النسخه: %1$d</string>
-    <string name="forceupdate_version_name">اسم النسخه: %1$s</string>
     <string name="forceupdate_download_completed">انتهى التحميل</string>
-    <string name="forceupdate_update_message">عزيزي المستخدم، صدر تحديث جديد.</string>
+    <string name="forceupdate_current_version">النسخة الحالية: (%2$s) | %1$s</string>
+    <string name="forceupdate_update_message">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
     <string name="forceupdate_dialog_message">حدث خطأ أثناء عملية التحقق من بياناتك.</string>
-    <string name="forceupdate_update_message_name">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
 </resources>

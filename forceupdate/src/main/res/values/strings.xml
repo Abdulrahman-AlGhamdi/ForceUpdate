@@ -1,18 +1,14 @@
 <resources>
     <!-- Force Update Activity Strings -->
-    <string name="forceupdate">Force Update</string>
     <string name="forceupdate_update">Update</string>
     <string name="forceupdate_install">Install</string>
     <string name="forceupdate_dialog_confirm">OK</string>
     <string name="forceupdate_canceled">Canceled</string>
     <string name="forceupdate_new_update">New Update</string>
-    <string name="forceupdate_installing">Installing…</string>
     <string name="forceupdate_downloading">Downloading…</string>
     <string name="forceupdate_download_percentage">%1$d%%</string>
-    <string name="forceupdate_version_code">Version Code: %1$d</string>
-    <string name="forceupdate_version_name">Version Name: %1$s</string>
     <string name="forceupdate_download_completed">Download completed</string>
-    <string name="forceupdate_update_message">Dear user, a new update has been released.</string>
-    <string name="forceupdate_update_message_name">Dear user, a new %1$s update has been released.</string>
+    <string name="forceupdate_current_version">Current Version: %1$s (%2$s)</string>
+    <string name="forceupdate_update_message">Dear user, a new %1$s update has been released.</string>
     <string name="forceupdate_dialog_message">An error was encountered while checking your credentials.</string>
 </resources>
