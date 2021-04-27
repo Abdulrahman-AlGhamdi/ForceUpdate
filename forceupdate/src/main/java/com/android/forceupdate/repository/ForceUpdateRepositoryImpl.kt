@@ -72,8 +72,13 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
                         val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
                         Uri.parse(uri).path?.let { externalPath ->
                             val file = File(externalPath)
+                            val buffer = ByteArray(16384)
                             val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
-                            outputStream.write(file.readBytes())
+                            val inputStream = file.inputStream()
+                            while (inputStream.read(buffer) != -1) {
+                                outputStream.write(buffer, 0, buffer.size)
+                            }
+                            inputStream.close()
                             outputStream.close()
                             file.delete()
                         }
