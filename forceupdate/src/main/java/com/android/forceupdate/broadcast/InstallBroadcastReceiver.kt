@@ -27,11 +27,6 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
                 val installIntent = intent.getParcelableExtra(EXTRA_INTENT) as? Intent
                 context.startActivity(installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK))
             }
-            STATUS_FAILURE -> {
-                localFile.delete()
-                bundle.putParcelable(EXTRA_BUNDLE, InstallFailure)
-                resultReceiver?.send(1, bundle)
-            }
             STATUS_SUCCESS -> {
                 localFile.delete()
                 bundle.putParcelable(EXTRA_BUNDLE, InstallSucceeded)
@@ -41,13 +36,10 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
                 bundle.putParcelable(EXTRA_BUNDLE, InstallCanceled)
                 resultReceiver?.send(1, bundle)
             }
-            STATUS_FAILURE_STORAGE -> {
-                bundle.putParcelable(EXTRA_BUNDLE, InstallError(STORAGE_FULL))
-                resultReceiver?.send(1, bundle)
-            }
             else -> {
                 intent.getStringExtra(EXTRA_STATUS_MESSAGE)?.let { message ->
-                    bundle.putParcelable(EXTRA_BUNDLE, InstallError(message))
+                    localFile.delete()
+                    bundle.putParcelable(EXTRA_BUNDLE, InstallFailure(message))
                     resultReceiver?.send(1, bundle)
                 }
             }
@@ -55,13 +47,8 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
     }
 
     sealed class InstallStatus: Parcelable {
-        @Parcelize object InstallFailure : InstallStatus(), Parcelable
         @Parcelize object InstallCanceled : InstallStatus(), Parcelable
         @Parcelize object InstallSucceeded : InstallStatus(), Parcelable
-        @Parcelize data class InstallError(val message: String) : InstallStatus(), Parcelable
-    }
-
-    companion object {
-        private const val STORAGE_FULL = "Not enough storage, please erase some files"
+        @Parcelize data class InstallFailure(val message: String) : InstallStatus(), Parcelable
     }
 }
