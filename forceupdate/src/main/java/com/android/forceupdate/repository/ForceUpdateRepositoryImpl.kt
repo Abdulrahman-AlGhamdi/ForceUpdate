@@ -71,19 +71,10 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
                     STATUS_SUCCESSFUL -> {
                         val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
                         Uri.parse(uri).path?.let { externalPath ->
-                            val file = File(externalPath)
-                            val buffer = ByteArray(16384)
-                            val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
-                            val inputStream = file.inputStream()
-                            while (inputStream.read(buffer) != -1) {
-                                outputStream.write(buffer, 0, buffer.size)
-                            }
-                            inputStream.close()
-                            outputStream.close()
-                            file.delete()
+                            writeFileToInternalStorage(File(externalPath))
+                            this@flow.emit(DownloadCompleted)
+                            isDownloading = false
                         }
-                        this@flow.emit(DownloadCompleted)
-                        isDownloading = false
                     }
                 }
             } else {
@@ -92,6 +83,21 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    private fun writeFileToInternalStorage(file: File) {
+        val outputStream = context.openFileOutput(file.name, MODE_PRIVATE).buffered(32768)
+        val inputStream = file.inputStream().buffered(32768)
+
+        var read = 0
+        while ({ read = inputStream.read(); read != -1 }()) {
+            outputStream.write(read)
+        }
+
+        outputStream.flush()
+        outputStream.close()
+        inputStream.close()
+        file.delete()
+    }
 
     override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
 
