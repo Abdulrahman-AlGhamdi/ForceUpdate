@@ -36,28 +36,13 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun init() {
         val factory = ForceUpdateProviderFactory(ForceUpdateRepositoryImpl(this))
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
-        showPackageInfo()
         if (viewModel.getLocalFile().exists()) customView(START_INSTALL) else customView(START_UPDATE)
-    }
-
-    private fun showPackageInfo() {
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-
-        val versionName = packageInfo.versionName
-        val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
-        binding.currentVersion.text = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
-
-        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
-        binding.logo.setImageDrawable(applicationLogo)
-
-        val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
-        binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
-        binding.applicationName.text = applicationName
     }
 
     private fun customView(state: ViewState) {
         when (state) {
             START_UPDATE -> {
+                showPackageInfo()
                 binding.button.visibility = View.VISIBLE
                 binding.downloaded.visibility = View.GONE
                 binding.progressBar.visibility = View.GONE
@@ -82,6 +67,21 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                 binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
             }
         }
+    }
+
+    private fun showPackageInfo() {
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+
+        val versionName = packageInfo.versionName
+        val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
+        binding.currentVersion.text = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
+
+        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
+        binding.logo.setImageDrawable(applicationLogo)
+
+        val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
+        binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
+        binding.applicationName.text = applicationName
     }
 
     private fun downloadApk() {
