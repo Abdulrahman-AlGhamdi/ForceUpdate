@@ -7,7 +7,7 @@ import java.io.File
 
 internal interface ForceUpdateRepository {
 
-    suspend fun downloadApk(apkLink: String): Flow<DownloadStatus>
+    suspend fun downloadApk(apkLink: String, header: Pair<String, String>?): Flow<DownloadStatus>
 
     fun getLocalFile() : File
 
