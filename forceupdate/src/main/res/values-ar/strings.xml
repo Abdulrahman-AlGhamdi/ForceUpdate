@@ -16,6 +16,6 @@
     // Download Messages
     <string name="download_paused">توقف التحميل</string>
     <string name="download_failed">فشل التحميل</string>
-    <string name="download_canceled">تم إلغاء التحيمل</string>
+    <string name="download_canceled">تم إلغاء التحميل</string>
     <string name="download_wrong_link">خطأ في الرابط</string>
 </resources>

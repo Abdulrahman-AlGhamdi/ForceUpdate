@@ -5,7 +5,7 @@ This library helps the user to implement :
 * Check the application version with update version to see whether the application need to be updated or not.
 * Delete application content by clearing all its data
 
-## Installation [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+## Installation
 
 ### Repositories
 
@@ -16,7 +16,7 @@ allprojects {
     }
 }
 ```
-### Dependency
+### Dependency [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
 ```groovy
 implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:tag'
 ```
@@ -43,9 +43,14 @@ forceUpdateManager.checkAppVersion(updateVersion = 2)
 * Third  : 
     * call `updateApplication` to start force update process
     * In the constructor provide the APK link
+    * Also you can provide a header to the download manger if you need
 
 ```kotlin
 forceUpdateManager.updateApplication(apkLink = "APK_LINK")
+```
+or
+```kotlin
+forceUpdateManager.updateApplication(apkLink = "APK_LINK", Pair("header", "value"))
 ```
 
 * Fourth :
