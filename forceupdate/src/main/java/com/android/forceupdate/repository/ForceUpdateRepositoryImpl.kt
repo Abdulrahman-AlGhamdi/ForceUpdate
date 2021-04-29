@@ -14,6 +14,7 @@ import android.os.Looper
 import android.os.ResultReceiver
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import com.android.forceupdate.R
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.*
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
@@ -28,59 +29,66 @@ import java.io.File
 internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUpdateRepository {
 
     override suspend fun downloadApk(apkLink: String) = flow {
-        val request = Request(Uri.parse(apkLink)).apply {
-            this.setAllowedOverRoaming(true)
-            this.setAllowedOverMetered(true)
-            this.setNotificationVisibility(Request.VISIBILITY_VISIBLE)
-            this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
-        }
+        try {
+            val request = Request(Uri.parse(apkLink)).apply {
+                this.setAllowedOverRoaming(true)
+                this.setAllowedOverMetered(true)
+                this.setNotificationVisibility(Request.VISIBILITY_VISIBLE)
+                this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
+            }
 
-        val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-        val sharedPreferences = context.getSharedPreferences(DOWNLOAD_ID_NAME, MODE_PRIVATE)
-        val id = sharedPreferences.getLong(DOWNLOAD_ID_KEY, -1L)
-        downloadManager.remove(id)
-        val downloadId = downloadManager.enqueue(request)
-        val query = Query().setFilterById(downloadId)
+            val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            val sharedPreferences = context.getSharedPreferences(DOWNLOAD_ID_NAME, MODE_PRIVATE)
+            val id = sharedPreferences.getLong(DOWNLOAD_ID_KEY, -1L)
+            downloadManager.remove(id)
+            val downloadId = downloadManager.enqueue(request)
+            val query = Query().setFilterById(downloadId)
 
-        sharedPreferences.edit().apply {
-            this.putLong(DOWNLOAD_ID_KEY, downloadId)
-            this.apply()
-        }
+            sharedPreferences.edit().apply {
+                this.putLong(DOWNLOAD_ID_KEY, downloadId)
+                this.apply()
+            }
 
-        var isDownloading = true
-        while (isDownloading) {
-            val cursor = downloadManager.query(query)
-            if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
-                val bytes = cursor.getInt(cursor.getColumnIndex(COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                val totalSize = cursor.getInt(cursor.getColumnIndex(COLUMN_TOTAL_SIZE_BYTES))
-                val status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS))
-                val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
+            var isDownloading = true
+            while (isDownloading) {
+                val cursor = downloadManager.query(query)
+                if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
+                    val bytes = cursor.getInt(cursor.getColumnIndex(COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val totalSize = cursor.getInt(cursor.getColumnIndex(COLUMN_TOTAL_SIZE_BYTES))
+                    val status = cursor.getInt(cursor.getColumnIndex(COLUMN_STATUS))
+                    val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
 
-                when (status) {
-                    STATUS_PAUSED -> {
-                        this@flow.emit(DownloadCanceled)
-                        isDownloading = false
-                    }
-                    STATUS_FAILED -> {
-                        this@flow.emit(DownloadCanceled)
-                        isDownloading = false
-                    }
-                    STATUS_RUNNING -> {
-                        this@flow.emit(DownloadProgress(percentage))
-                    }
-                    STATUS_SUCCESSFUL -> {
-                        val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
-                        Uri.parse(uri).path?.let { externalPath ->
-                            writeFileToInternalStorage(File(externalPath))
-                            this@flow.emit(DownloadCompleted)
+                    when (status) {
+                        STATUS_PAUSED -> {
+                            this@flow.emit(DownloadCanceled(context.getString(R.string.download_paused)))
                             isDownloading = false
                         }
+                        STATUS_FAILED -> {
+                            this@flow.emit(DownloadCanceled(context.getString(R.string.download_failed)))
+                            isDownloading = false
+                        }
+                        STATUS_RUNNING -> {
+                            this@flow.emit(DownloadProgress(percentage))
+                        }
+                        STATUS_SUCCESSFUL -> {
+                            val uri = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
+                            Uri.parse(uri).path?.let { externalPath ->
+                                writeFileToInternalStorage(File(externalPath))
+                                this@flow.emit(DownloadCompleted)
+                                isDownloading = false
+                            }
+                        }
                     }
+                } else {
+                    this@flow.emit(DownloadCanceled(context.getString(R.string.download_canceled)))
+                    isDownloading = false
                 }
-            } else {
-                this@flow.emit(DownloadCanceled)
-                isDownloading = false
             }
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            this@flow.emit(DownloadCanceled(context.getString(R.string.download_wrong_link)))
+        } catch (exception: Exception) {
+            exception.message?.let { this@flow.emit(DownloadCanceled(it)) }
+
         }
     }.flowOn(Dispatchers.IO)
 
@@ -103,8 +111,8 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
 
     sealed class DownloadStatus {
         data class DownloadProgress(val progress: Int) : DownloadStatus()
+        data class DownloadCanceled(val message: String) : DownloadStatus()
         object DownloadCompleted : DownloadStatus()
-        object DownloadCanceled : DownloadStatus()
     }
 
     override fun installApk(localFile: File) = callbackFlow<InstallStatus> {
