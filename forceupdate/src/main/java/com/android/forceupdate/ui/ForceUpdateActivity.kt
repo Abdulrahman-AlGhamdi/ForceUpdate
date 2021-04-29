@@ -89,7 +89,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
                 viewModel.downloadApk(apkLink).collect { downloadStatus ->
                     when (downloadStatus) {
-                        DownloadCanceled -> {
+                        is DownloadCanceled -> {
+                            Snackbar.make(binding.root, downloadStatus.message, Snackbar.LENGTH_SHORT).show()
                             binding.message.text = getString(R.string.forceupdate_canceled)
                             customView(START_UPDATE)
                         }
