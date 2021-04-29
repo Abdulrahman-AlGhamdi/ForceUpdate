@@ -10,6 +10,7 @@ import android.os.Build.VERSION_CODES.P
 import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APK_LINK
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_HEADER
 
 class ForceUpdateManager(private val activity: Activity) {
 
@@ -22,9 +23,10 @@ class ForceUpdateManager(private val activity: Activity) {
             updateVersion > packageInfo.versionCode
     }
 
-    fun updateApplication(apkLink: String) {
+    fun updateApplication(apkLink: String, header: Pair<String, String>? = null) {
         val intent = Intent(activity, ForceUpdateActivity::class.java).apply {
             this.putExtra(EXTRA_APK_LINK, apkLink)
+            header?.let { this.putExtra(EXTRA_HEADER, it) }
             activity.startActivity(this)
         }
     }

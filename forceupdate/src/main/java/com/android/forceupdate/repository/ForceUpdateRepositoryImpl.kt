@@ -28,13 +28,14 @@ import java.io.File
 
 internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUpdateRepository {
 
-    override suspend fun downloadApk(apkLink: String) = flow {
+    override suspend fun downloadApk(apkLink: String, header: Pair<String,String>?) = flow {
         try {
             val request = Request(Uri.parse(apkLink)).apply {
                 this.setAllowedOverRoaming(true)
                 this.setAllowedOverMetered(true)
                 this.setNotificationVisibility(Request.VISIBILITY_VISIBLE)
                 this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
+                header?.let { this.addRequestHeader(header.first, header.second) }
             }
 
             val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager

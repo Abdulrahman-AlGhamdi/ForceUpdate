@@ -86,8 +86,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     private fun downloadApk() {
         lifecycleScope.launch(Dispatchers.Main) {
+            val header = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<String, String>
             intent.getStringExtra(EXTRA_APK_LINK)?.let { apkLink ->
-                viewModel.downloadApk(apkLink).collect { downloadStatus ->
+                viewModel.downloadApk(apkLink, header).collect { downloadStatus ->
                     when (downloadStatus) {
                         is DownloadCanceled -> {
                             Snackbar.make(binding.root, downloadStatus.message, Snackbar.LENGTH_SHORT).show()
@@ -137,5 +138,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_APK_LINK = "link"
+        const val EXTRA_HEADER = "header"
     }
 }
