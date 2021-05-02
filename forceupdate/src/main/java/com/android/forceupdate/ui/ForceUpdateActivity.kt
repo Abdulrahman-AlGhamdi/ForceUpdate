@@ -1,10 +1,17 @@
 package com.android.forceupdate.ui
 
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.ColorFilter
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.use
+import androidx.core.widget.ImageViewCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
@@ -18,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
+
 
 internal class ForceUpdateActivity : AppCompatActivity() {
 
@@ -58,6 +66,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                 binding.progressBar.max = 100
             }
             START_INSTALL -> {
+                showPackageInfo()
                 binding.button.visibility = View.VISIBLE
                 binding.downloaded.visibility = View.GONE
                 binding.progressBar.visibility = View.GONE
@@ -72,6 +81,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun showPackageInfo() {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
 
+        if (intent.getBooleanExtra(EXTRA_OPTIONAL_DOWNLOAD, false))
+             binding.optional.visibility = View.VISIBLE else binding.optional.visibility = View.GONE
+
         val versionName = packageInfo.versionName
         val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
         binding.currentVersion.text = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
@@ -82,6 +94,17 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
         binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
         binding.applicationName.text = applicationName
+
+        obtainStyledAttributes(TypedValue().data, intArrayOf(R.attr.colorPrimary)).use {
+            val color = it.getColor(0, 0)
+            binding.button.setTextColor(Color.WHITE)
+            binding.button.background.setTint(color)
+            ImageViewCompat.setImageTintList(binding.optional, ColorStateList.valueOf(color))
+        }
+
+        binding.optional.setOnClickListener {
+            finish()
+        }
     }
 
     private fun downloadApk() {
@@ -139,5 +162,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_APK_LINK = "link"
         const val EXTRA_HEADER = "header"
+        const val EXTRA_OPTIONAL_DOWNLOAD = "optional"
     }
 }

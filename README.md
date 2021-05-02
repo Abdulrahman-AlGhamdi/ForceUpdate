@@ -43,14 +43,19 @@ forceUpdateManager.checkAppVersion(updateVersion = 2)
 * Third  : 
     * call `updateApplication` to start force update process
     * In the constructor provide the APK link
-    * Also you can provide a header to the download manger if you need
+    * Provide a header to the download manger if you need
+    * Make the force update optional or not
 
 ```kotlin
 forceUpdateManager.updateApplication(apkLink = "APK_LINK")
 ```
 or
 ```kotlin
-forceUpdateManager.updateApplication(apkLink = "APK_LINK", Pair("header", "value"))
+forceUpdateManager.updateApplication(
+    apkLink = "APK_LINK",
+    header = Pair("header", "value"),
+    optional = true
+)
 ```
 
 * Fourth :
