@@ -18,6 +18,16 @@
         app:lottie_fileName="force_update_animation.json"
         app:lottie_loop="true" />
 
+    <ImageView
+        android:id="@+id/optional"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="16dp"
+        android:src="@drawable/icon_cancel"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
