@@ -139,12 +139,11 @@ internal class ForceUpdateRepositoryImpl(private val context: Context) : ForceUp
         }
 
         contentResolver.openInputStream(localFile.toUri())?.use { apkStream ->
-            val length = DocumentFile.fromSingleUri(context, localFile.toUri())?.length() ?: -1
             val sessionParams = SessionParams(SessionParams.MODE_FULL_INSTALL)
             val sessionId = packageInstaller.createSession(sessionParams)
             val session = packageInstaller.openSession(sessionId)
 
-            session.openWrite(localFile.name, 0, length).use { sessionStream ->
+            session.openWrite(localFile.name, 0, -1).use { sessionStream ->
                 apkStream.copyTo(sessionStream)
                 session.fsync(sessionStream)
             }

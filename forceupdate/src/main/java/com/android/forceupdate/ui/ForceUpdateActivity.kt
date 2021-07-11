@@ -95,6 +95,11 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
         binding.applicationName.text = applicationName
 
+        val animation = intent.getStringExtra(EXTRA_ANIMATION)
+        if (!animation.isNullOrEmpty() && animation.endsWith(".json"))
+            binding.animation.setAnimation(animation)
+        else binding.animation.setAnimation("force_update_animation.json")
+
         obtainStyledAttributes(TypedValue().data, intArrayOf(R.attr.colorPrimary)).use {
             val color = it.getColor(0, 0)
             binding.button.setTextColor(Color.WHITE)
@@ -162,6 +167,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_APK_LINK = "link"
         const val EXTRA_HEADER = "header"
+        const val EXTRA_ANIMATION = "animation"
         const val EXTRA_OPTIONAL_DOWNLOAD = "optional"
     }
 }
