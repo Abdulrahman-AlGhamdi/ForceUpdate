@@ -45,6 +45,7 @@ forceUpdateManager.checkAppVersion(updateVersion = 2)
     * In the constructor provide the APK link
     * Provide a header to the download manger if you need
     * Make the force update optional or not
+    * Change the loading animation of the force update screen by adding the file name that ends with `.json` as an argument \\this file must be in the assets folder
 
 ```kotlin
 forceUpdateManager.updateApplication(apkLink = "APK_LINK")
@@ -54,7 +55,8 @@ or
 forceUpdateManager.updateApplication(
     apkLink = "APK_LINK",
     header = Pair("header", "value"),
-    optional = true
+    optional = true,
+    animation = "loading.json"
 )
 ```
 

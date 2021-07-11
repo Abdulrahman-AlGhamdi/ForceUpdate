@@ -9,6 +9,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
+import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_ANIMATION
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_APK_LINK
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_HEADER
 import com.android.forceupdate.ui.ForceUpdateActivity.Companion.EXTRA_OPTIONAL_DOWNLOAD
@@ -24,11 +25,17 @@ class ForceUpdateManager(private val activity: Activity) {
             updateVersion > packageInfo.versionCode
     }
 
-    fun updateApplication(apkLink: String, header: Pair<String, String>? = null, optional: Boolean = false) {
+    fun updateApplication(
+        apkLink: String,
+        header: Pair<String, String>? = null,
+        optional: Boolean = false,
+        animation: String? = null
+    ) {
         Intent(activity, ForceUpdateActivity::class.java).apply {
             this.putExtra(EXTRA_APK_LINK, apkLink)
             this.putExtra(EXTRA_OPTIONAL_DOWNLOAD, optional)
             header?.let { this.putExtra(EXTRA_HEADER, it) }
+            animation?.let { this.putExtra(EXTRA_ANIMATION, animation) }
             activity.startActivity(this)
         }
     }
