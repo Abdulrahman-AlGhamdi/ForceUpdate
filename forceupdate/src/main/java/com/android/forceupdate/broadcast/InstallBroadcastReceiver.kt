@@ -9,9 +9,9 @@ import android.content.pm.PackageInstaller.*
 import android.os.Parcelable
 import android.os.ResultReceiver
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
-import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.Companion.EXTRA_BUNDLE
-import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.Companion.LOCAL_FILE
-import com.android.forceupdate.repository.ForceUpdateRepositoryImpl.Companion.RESULT_RECEIVER
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.EXTRA_BUNDLE
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.LOCAL_FILE
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.RESULT_RECEIVER
 import kotlinx.parcelize.Parcelize
 import java.io.File
 

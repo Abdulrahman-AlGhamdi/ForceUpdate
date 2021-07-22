@@ -1,16 +1,19 @@
 package com.android.forceupdate.ui
 
 import androidx.lifecycle.ViewModel
-import com.android.forceupdate.repository.ForceUpdateRepository
+import com.android.forceupdate.repository.install.InstallRepository
+import com.android.forceupdate.repository.download.DownloadRepository
 import java.io.File
 
 internal class ForceUpdateViewModel(
-    private val forceUpdateRepository: ForceUpdateRepository
+    private val downloadRepository: DownloadRepository,
+    private val installRepository: InstallRepository
 ) : ViewModel() {
 
-    suspend fun downloadApk(apkUrl: String, header: Pair<String, String>?) = forceUpdateRepository.downloadApk(apkUrl, header)
+    suspend fun downloadApk(apkUrl: String, header: Pair<String, String>?) =
+        downloadRepository.downloadApk(apkUrl, header)
 
-    fun getLocalFile() = forceUpdateRepository.getLocalFile()
+    fun getLocalFile() = downloadRepository.getLocalFile()
 
-    fun installApk(localFile: File) = forceUpdateRepository.installApk(localFile)
+    fun installApk(localFile: File) = installRepository.installApk(localFile)
 }
