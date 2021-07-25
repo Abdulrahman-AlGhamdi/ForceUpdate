@@ -112,13 +112,10 @@ class DownloadRepositoryImpl(
     }
 
     private fun writeFileToInternalStorage(file: File) {
-        val outputStream = context.openFileOutput(file.name, MODE_PRIVATE).buffered(32768)
-        val inputStream  = file.inputStream().buffered(32768)
-        var read         = 0
+        val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
+        val inputStream  = file.inputStream()
 
-        while ({ read = inputStream.read(); read != -1 }()) {
-            outputStream.write(read)
-        }
+        inputStream.copyTo(outputStream)
 
         outputStream.flush()
         outputStream.close()
