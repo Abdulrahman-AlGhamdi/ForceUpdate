@@ -34,7 +34,8 @@ class DownloadRepositoryImpl(
 
             while (isDownloading) {
                 val cursor = downloadManager.query(query)
-                if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) getDownloadStatus(cursor).let { downloadStatus ->
+                if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
+                    val downloadStatus = getDownloadStatus(cursor)
                     this.emit(downloadStatus)
                     if (downloadStatus !is Progress) isDownloading = false
                 } else {

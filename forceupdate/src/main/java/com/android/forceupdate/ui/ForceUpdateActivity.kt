@@ -42,7 +42,10 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun init() {
         showPackageInfo()
 
-        val factory = ForceUpdateProviderFactory(DownloadRepositoryImpl(this), InstallRepositoryImpl(this))
+        val factory = ForceUpdateProviderFactory(
+            DownloadRepositoryImpl(this),
+            InstallRepositoryImpl(this)
+        )
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
         if (viewModel.getLocalFile().exists()) customView(START_INSTALL) else customView(START_UPDATE)
     }
