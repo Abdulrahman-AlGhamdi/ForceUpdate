@@ -41,10 +41,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     private fun init() {
         showPackageInfo()
-        val factory = ForceUpdateProviderFactory(
-            DownloadRepositoryImpl(this),
-            InstallRepositoryImpl(this)
-        )
+
+        val factory = ForceUpdateProviderFactory(DownloadRepositoryImpl(this), InstallRepositoryImpl(this))
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
         if (viewModel.getLocalFile().exists()) customView(START_INSTALL) else customView(START_UPDATE)
     }
@@ -90,6 +88,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                             customView(START_UPDATE)
                         }
                         is Completed -> {
+                            viewModel.writeFileToInternalStorage(downloadStatus.uri)
                             customView(START_INSTALL)
                         }
                         is Progress -> {
@@ -104,7 +103,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     }
 
     private fun installApk(localFile: File) {
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch(Dispatchers.Main) {
             viewModel.installApk(localFile).collect {
                 when (it) {
                     InstallCanceled -> {

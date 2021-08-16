@@ -17,7 +17,7 @@ import com.android.forceupdate.broadcast.InstallBroadcastReceiver.*
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.*
 import java.io.File
 
 internal class InstallRepositoryImpl(private val context: Context) : InstallRepository {
@@ -28,7 +28,7 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
             override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
                 super.onReceiveResult(resultCode, resultData)
                 resultData.getParcelable<InstallStatus>(EXTRA_BUNDLE)?.let { installStatus ->
-                    this@callbackFlow.offer(installStatus)
+                    this@callbackFlow.trySend(installStatus)
                 }
             }
         }
@@ -37,7 +37,7 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
         startInstalling(localFile, pendingIntent)
 
         this.awaitClose()
-    }
+    }.flowOn(Dispatchers.IO)
 
     private fun getIntent(resultReceiver: ResultReceiver, localFile: File): PendingIntent {
         val intent = Intent(context, InstallBroadcastReceiver::class.java).apply {

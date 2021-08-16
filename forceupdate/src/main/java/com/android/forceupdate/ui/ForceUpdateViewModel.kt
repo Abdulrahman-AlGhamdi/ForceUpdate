@@ -10,8 +10,9 @@ internal class ForceUpdateViewModel(
     private val installRepository: InstallRepository
 ) : ViewModel() {
 
-    suspend fun downloadApk(apkUrl: String, header: Pair<String, String>?) =
-        downloadRepository.downloadApk(apkUrl, header)
+    fun downloadApk(apkUrl: String, header: Pair<String, String>?) = downloadRepository.downloadApk(apkUrl, header)
+
+    fun writeFileToInternalStorage(uri: String) = downloadRepository.writeFileToInternalStorage(uri)
 
     fun getLocalFile() = downloadRepository.getLocalFile()
 

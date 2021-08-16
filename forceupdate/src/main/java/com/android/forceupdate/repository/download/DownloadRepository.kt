@@ -6,7 +6,9 @@ import java.io.File
 
 interface DownloadRepository {
 
-    suspend fun downloadApk(apkLink: String, header: Pair<String, String>?): Flow<DownloadStatus>
+    fun downloadApk(apkLink: String, header: Pair<String, String>?): Flow<DownloadStatus>
+
+    fun writeFileToInternalStorage(uri: String)
 
     fun getLocalFile() : File
 }
