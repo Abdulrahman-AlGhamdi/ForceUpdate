@@ -47,8 +47,8 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
     }
 
     sealed class InstallStatus: Parcelable {
-        @Parcelize object InstallCanceled : InstallStatus(), Parcelable
-        @Parcelize object InstallSucceeded : InstallStatus(), Parcelable
+        @Parcelize object InstallCanceled                         : InstallStatus(), Parcelable
+        @Parcelize object InstallSucceeded                        : InstallStatus(), Parcelable
         @Parcelize data class InstallFailure(val message: String) : InstallStatus(), Parcelable
     }
 }

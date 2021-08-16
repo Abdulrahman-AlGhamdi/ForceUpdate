@@ -18,7 +18,7 @@ class DownloadRepositoryImpl(
     private val context: Context
 ) : DownloadRepository {
 
-    override suspend fun downloadApk(apkLink: String, header: Pair<String,String>?) = flow {
+    override fun downloadApk(apkLink: String, header: Pair<String,String>?) = flow {
         try {
             val request = Request(Uri.parse(apkLink)).apply {
                 this.setAllowedOverRoaming(true)
@@ -74,22 +74,11 @@ class DownloadRepositoryImpl(
         val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
 
         return when (status) {
-            STATUS_PAUSED -> {
-                Canceled(context.getString(R.string.download_paused, reason))
-            }
-            STATUS_FAILED -> {
-                Canceled(context.getString(R.string.download_failed, reason))
-            }
-            STATUS_RUNNING -> {
-                Progress(percentage)
-            }
-            STATUS_SUCCESSFUL -> {
-                Uri.parse(uri).path?.let { externalPath ->
-                    writeFileToInternalStorage(File(externalPath))
-                }
-                Completed
-            }
-            else -> Canceled(reason)
+            STATUS_PAUSED     -> Canceled(context.getString(R.string.download_paused, reason))
+            STATUS_FAILED     -> Canceled(context.getString(R.string.download_failed, reason))
+            STATUS_RUNNING    -> Progress(percentage)
+            STATUS_SUCCESSFUL -> Completed(uri)
+            else              -> Canceled(reason)
         }
     }
 
@@ -107,11 +96,12 @@ class DownloadRepositoryImpl(
             1007 -> "Device Not Found"
             1008 -> "Cannot Resume"
             1009 -> "File Already Exists"
-            else -> "No Internet Connection"
+            else -> "Undefined"
         }
     }
 
-    private fun writeFileToInternalStorage(file: File) {
+    override fun writeFileToInternalStorage(uri: String) {
+        val file         = File(Uri.parse(uri).path)
         val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
         val inputStream  = file.inputStream()
 
@@ -126,14 +116,14 @@ class DownloadRepositoryImpl(
     override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
 
     sealed class DownloadStatus {
-        object Completed : DownloadStatus()
-        data class Progress(val progress: Int) : DownloadStatus()
+        data class Completed(val uri: String)   : DownloadStatus()
+        data class Progress(val progress: Int)  : DownloadStatus()
         data class Canceled(val reason: String) : DownloadStatus()
     }
 
     companion object DownloadConstant {
-        private const val APK_FILE_NAME = "update.apk"
-        private const val DOWNLOAD_ID_KEY = "download"
+        private const val APK_FILE_NAME    = "update.apk"
+        private const val DOWNLOAD_ID_KEY  = "download"
         private const val DOWNLOAD_ID_NAME = "download_id"
     }
 }
