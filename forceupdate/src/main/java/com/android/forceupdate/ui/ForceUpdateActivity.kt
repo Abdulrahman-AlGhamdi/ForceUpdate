@@ -127,6 +127,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun customView(state: ViewState) {
         when (state) {
             START_UPDATE -> {
+                showPackageInfo()
                 binding.button.visibility = View.VISIBLE
                 binding.downloaded.visibility = View.GONE
                 binding.progressBar.visibility = View.GONE
@@ -142,6 +143,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
                 binding.progressBar.max = 100
             }
             START_INSTALL -> {
+                showPackageInfo()
                 binding.button.visibility = View.VISIBLE
                 binding.downloaded.visibility = View.GONE
                 binding.progressBar.visibility = View.GONE
