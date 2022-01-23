@@ -1,2 +1,3 @@
 include ':forceupdate'
 rootProject.name = "ForceUpdate"
+include ':application'
