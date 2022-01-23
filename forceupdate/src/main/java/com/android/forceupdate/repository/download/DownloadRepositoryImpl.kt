@@ -28,9 +28,9 @@ class DownloadRepositoryImpl(
                 header?.let { this.addRequestHeader(header.first, header.second) }
             }
 
-            val downloadManager   = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-            val query             = getDownloadQuery(request, downloadManager)
-            var isDownloading     = true
+            val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+            val query           = getDownloadQuery(request, downloadManager)
+            var isDownloading   = true
 
             while (isDownloading) {
                 val cursor = downloadManager.query(query)
