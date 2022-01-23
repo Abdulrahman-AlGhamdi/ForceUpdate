@@ -7,7 +7,9 @@
 
     <application>
 
-        <activity android:name=".ui.ForceUpdateActivity" />
+        <activity
+            android:name=".ui.ForceUpdateActivity"
+            android:screenOrientation="portrait" />
 
         <receiver android:name=".broadcast.InstallBroadcastReceiver" />
 
