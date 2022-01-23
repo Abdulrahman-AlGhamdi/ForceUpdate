@@ -19,17 +19,15 @@ class ForceUpdateManager(private val activity: Activity) {
     fun checkAppVersion(updateVersion: Int): Boolean {
         val packageInfo = activity.packageManager.getPackageInfo(activity.packageName, 0)
 
-        return if (SDK_INT >= P)
-            updateVersion > packageInfo.longVersionCode
-        else
-            updateVersion > packageInfo.versionCode
+        return if (SDK_INT >= P) updateVersion > packageInfo.longVersionCode
+        else updateVersion > packageInfo.versionCode
     }
 
     fun updateApplication(
-        apkLink: String,
-        header: Pair<String, String>? = null,
-        optional: Boolean = false,
-        animation: String? = null
+        apkLink   : String,
+        header    : Pair<String, String>? = null,
+        optional  : Boolean = false,
+        animation : String? = null
     ) {
         Intent(activity, ForceUpdateActivity::class.java).apply {
             this.putExtra(EXTRA_APK_LINK, apkLink)

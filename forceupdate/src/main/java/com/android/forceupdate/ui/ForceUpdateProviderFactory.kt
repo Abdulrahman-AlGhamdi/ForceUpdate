@@ -10,7 +10,7 @@ internal class ForceUpdateProviderFactory(
     private val forceUpdateRepositoryImpl: InstallRepositoryImpl
 ) : ViewModelProvider.Factory {
 
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ForceUpdateViewModel(downloadRepositoryImpl, forceUpdateRepositoryImpl) as T
     }
 }

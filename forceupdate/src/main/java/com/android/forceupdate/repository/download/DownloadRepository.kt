@@ -1,14 +1,16 @@
 package com.android.forceupdate.repository.download
 
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl.DownloadStatus
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 
 interface DownloadRepository {
 
-    fun downloadApk(apkLink: String, header: Pair<String, String>?): Flow<DownloadStatus>
+    val downloadStatus: StateFlow<DownloadStatus>
 
-    fun writeFileToInternalStorage(uri: String)
+    suspend fun downloadApk(apkLink: String, header: Pair<*, *>?)
+
+    suspend fun writeFileToInternalStorage(uri: String)
 
     fun getLocalFile() : File
 }

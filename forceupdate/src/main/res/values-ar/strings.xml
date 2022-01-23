@@ -5,9 +5,8 @@
     <string name="forceupdate_install">تثبيت</string>
     <string name="forceupdate_dialog_confirm">موافق</string>
     <string name="forceupdate_new_update">تحديث جديد</string>
-    <string name="forceupdate_downloading">جاري التحميل…</string>
+    <string name="forceupdate_downloading">جاري التحميل… %1$d%%</string>
     <string name="forceupdate_canceled">تم إلغاء التحميل</string>
-    <string name="forceupdate_download_percentage">%1$d%%</string>
     <string name="forceupdate_download_completed">انتهى التحميل</string>
     <string name="forceupdate_current_version">النسخة الحالية: (%2$s) | %1$s</string>
     <string name="forceupdate_update_message">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
