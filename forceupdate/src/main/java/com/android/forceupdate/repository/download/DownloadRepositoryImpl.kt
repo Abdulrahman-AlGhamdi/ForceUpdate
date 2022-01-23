@@ -73,6 +73,7 @@ class DownloadRepositoryImpl(
         val uri        = cursor.getString(cursor.getColumnIndex(COLUMN_LOCAL_URI))
         val reason     = getReason(cursor.getInt(cursor.getColumnIndex(COLUMN_REASON)))
         val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
+        cursor.close()
 
         return when (status) {
             STATUS_PAUSED     -> DownloadStatus.Canceled(context.getString(R.string.download_paused, reason))
