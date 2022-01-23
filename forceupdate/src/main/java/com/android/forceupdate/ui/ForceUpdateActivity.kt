@@ -13,17 +13,16 @@ import androidx.core.widget.ImageViewCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.android.forceupdate.R
-import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
 import com.android.forceupdate.databinding.ActivityForceUpdateBinding
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl.DownloadStatus.*
 import com.android.forceupdate.repository.install.InstallRepositoryImpl
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus
 import com.android.forceupdate.util.showSnackBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.io.File
 
 internal class ForceUpdateActivity : AppCompatActivity() {
 
@@ -31,7 +30,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private lateinit var viewModel : ForceUpdateViewModel
 
     /** force update jobs **/
-    private lateinit var downloadJob: Job
+    private lateinit var downloadJob : Job
+    private lateinit var installJob  : Job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +41,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
         init()
         downloadJob = getDownloadStatus()
+        installJob  = getInstallStatus()
     }
 
     private fun init() {
@@ -96,18 +97,21 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         }
     }
 
-    private fun installApk(localFile: File) = lifecycleScope.launch(Dispatchers.Main) {
-        viewModel.installApk(localFile).collect {
+    private fun getInstallStatus() = lifecycleScope.launch(Dispatchers.Main) {
+        viewModel.installStatus.collect {
             when (it) {
-                InstallSucceeded  -> finish()
-                InstallCanceled   -> getForceUpdateState(ForceUpdateState.Install())
-                is InstallFailure -> getForceUpdateState(ForceUpdateState.Ready(it.message))
+                InstallStatus.InstallSucceeded  -> finish()
+                InstallStatus.InstallCanceled   -> getForceUpdateState(ForceUpdateState.Install())
+                is InstallStatus.InstallFailure -> getForceUpdateState(ForceUpdateState.Ready(it.message))
+                else -> Unit
             }
         }
     }
 
     private fun getForceUpdateState(state: ForceUpdateState): Unit = when (state) {
         is ForceUpdateState.Ready    -> {
+            if (::installJob.isInitialized) installJob.cancel()
+
             binding.button.visibility      = View.VISIBLE
             binding.progressBar.visibility = View.GONE
             binding.button.text            = getString(R.string.forceupdate_update)
@@ -133,7 +137,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.message.text            = getString(R.string.forceupdate_download_completed)
 
             state.uri?.let { viewModel.writeFileToInternalStorage(it) }
-            binding.button.setOnClickListener { installApk(viewModel.getLocalFile()) }
+            binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
         }
     }
 

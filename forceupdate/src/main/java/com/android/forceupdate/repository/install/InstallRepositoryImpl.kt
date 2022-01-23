@@ -1,43 +1,37 @@
 package com.android.forceupdate.repository.install
 
-import android.app.DownloadManager.*
 import android.app.PendingIntent
 import android.app.PendingIntent.*
 import android.content.Context
-import android.content.Context.*
 import android.content.Intent
-import android.content.pm.PackageInstaller.*
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.ResultReceiver
+import android.content.pm.PackageInstaller
+import android.os.*
 import androidx.core.net.toUri
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver
-import com.android.forceupdate.broadcast.InstallBroadcastReceiver.*
-import com.android.forceupdate.broadcast.InstallBroadcastReceiver.InstallStatus.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.parcelize.Parcelize
 import java.io.File
 
 internal class InstallRepositoryImpl(private val context: Context) : InstallRepository {
 
-    override fun installApk(localFile: File) = callbackFlow {
+    private val _installStatus = MutableStateFlow<InstallStatus>(InstallStatus.InstallIdle)
+    override val installStatus = _installStatus.asStateFlow()
+
+    override suspend fun installApk(localFile: File) {
 
         val resultReceiver = object : ResultReceiver(Handler(Looper.getMainLooper())) {
             override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
                 super.onReceiveResult(resultCode, resultData)
                 resultData.getParcelable<InstallStatus>(EXTRA_BUNDLE)?.let { installStatus ->
-                    this@callbackFlow.trySend(installStatus)
+                    _installStatus.value = installStatus
                 }
             }
         }
 
         val pendingIntent = getIntent(resultReceiver, localFile)
         startInstalling(localFile, pendingIntent)
-
-        this.awaitClose()
-    }.flowOn(Dispatchers.IO)
+    }
 
     private fun getIntent(resultReceiver: ResultReceiver, localFile: File): PendingIntent {
         val intent = Intent(context, InstallBroadcastReceiver::class.java).apply {
@@ -55,7 +49,7 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
         val contentResolver  = context.contentResolver
 
         contentResolver.openInputStream(localFile.toUri())?.use { apkStream ->
-            val sessionParams = SessionParams(SessionParams.MODE_FULL_INSTALL)
+            val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
             val sessionId     = packageInstaller.createSession(sessionParams)
             val session       = packageInstaller.openSession(sessionId)
 
@@ -69,9 +63,16 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
         }
     }
 
+    sealed class InstallStatus: Parcelable {
+        @Parcelize object InstallIdle                             : InstallStatus(), Parcelable
+        @Parcelize object InstallCanceled                         : InstallStatus(), Parcelable
+        @Parcelize object InstallSucceeded                        : InstallStatus(), Parcelable
+        @Parcelize data class InstallFailure(val message: String) : InstallStatus(), Parcelable
+    }
+
     companion object {
-        const val LOCAL_FILE = "local_file"
-        const val EXTRA_BUNDLE = "extra_bundle"
+        const val LOCAL_FILE      = "local_file"
+        const val EXTRA_BUNDLE    = "extra_bundle"
         const val RESULT_RECEIVER = "result_receiver"
     }
 }
