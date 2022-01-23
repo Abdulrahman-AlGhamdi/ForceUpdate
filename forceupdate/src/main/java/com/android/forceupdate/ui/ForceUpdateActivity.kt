@@ -105,20 +105,14 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         }
     }
 
-    private fun installApk(localFile: File) {
-        lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.installApk(localFile).collect {
-                when (it) {
-                    InstallCanceled -> {
-                        customView(START_INSTALL)
-                    }
-                    is InstallFailure -> {
-                        Snackbar.make(binding.root, it.message, Snackbar.LENGTH_SHORT).show()
-                        customView(START_UPDATE)
-                    }
-                    InstallSucceeded -> {
-                        finish()
-                    }
+    private fun installApk(localFile: File) = lifecycleScope.launch(Dispatchers.Main) {
+        viewModel.installApk(localFile).collect {
+            when (it) {
+                InstallCanceled   -> customView(START_INSTALL)
+                InstallSucceeded  -> finish()
+                is InstallFailure -> {
+                    Snackbar.make(binding.root, it.message, Snackbar.LENGTH_SHORT).show()
+                    customView(START_UPDATE)
                 }
             }
         }
