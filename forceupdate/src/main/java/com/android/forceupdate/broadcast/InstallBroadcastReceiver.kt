@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.EXTRA_INTENT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.content.pm.PackageInstaller.*
+import android.content.pm.PackageInstaller
 import android.os.ResultReceiver
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.EXTRA_BUNDLE
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.LOCAL_FILE
@@ -20,22 +20,24 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
         val resultReceiver = bundle?.getParcelable(RESULT_RECEIVER) as? ResultReceiver
         val localFile      = bundle?.getSerializable(LOCAL_FILE) as File
 
-        when (intent.getIntExtra(EXTRA_STATUS, -1)) {
-            STATUS_PENDING_USER_ACTION -> {
+        when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -1)) {
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 val installIntent = intent.getParcelableExtra(EXTRA_INTENT) as? Intent
                 context.startActivity(installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK))
+                bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallProgress)
+                resultReceiver?.send(1, bundle)
             }
-            STATUS_SUCCESS -> {
-                localFile.delete()
+            PackageInstaller.STATUS_SUCCESS -> {
+                if (localFile.exists()) localFile.delete()
                 bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallSucceeded)
                 resultReceiver?.send(1, bundle)
             }
-            STATUS_FAILURE_ABORTED -> {
+            PackageInstaller.STATUS_FAILURE_ABORTED -> {
                 bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallCanceled)
                 resultReceiver?.send(1, bundle)
             }
-            else -> intent.getStringExtra(EXTRA_STATUS_MESSAGE)?.let { message ->
-                localFile.delete()
+            else -> intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)?.let { message ->
+                if (localFile.exists()) localFile.delete()
                 bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallFailure(message))
                 resultReceiver?.send(1, bundle)
             }

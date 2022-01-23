@@ -8,6 +8,7 @@ import android.content.Context.MODE_PRIVATE
 import android.database.Cursor
 import android.net.Uri
 import com.android.forceupdate.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
@@ -16,7 +17,7 @@ class DownloadRepositoryImpl(
     private val context: Context
 ) : DownloadRepository {
 
-    private val _downloadStatus = MutableStateFlow<DownloadStatus>(DownloadStatus.Idle)
+    private val _downloadStatus = MutableStateFlow<DownloadStatus>(DownloadStatus.DownloadIdle)
     override val downloadStatus = _downloadStatus.asStateFlow()
 
     override suspend fun downloadApk(apkLink: String, header: Pair<*, *>?) {
@@ -33,21 +34,24 @@ class DownloadRepositoryImpl(
             val query           = getDownloadQuery(request, downloadManager)
             var isDownloading   = true
 
+            _downloadStatus.value = DownloadStatus.DownloadProgress(0)
+            delay(1000)
+
             while (isDownloading) {
                 val cursor = downloadManager.query(query)
                 if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
                     val downloadStatus = getDownloadStatus(cursor)
                     _downloadStatus.value = downloadStatus
-                    if (downloadStatus !is DownloadStatus.Progress) isDownloading = false
+                    if (downloadStatus !is DownloadStatus.DownloadProgress) isDownloading = false
                 } else {
                     isDownloading = false
-                    _downloadStatus.value = DownloadStatus.Canceled(context.getString(R.string.download_canceled))
+                    _downloadStatus.value = DownloadStatus.DownloadCanceled(context.getString(R.string.download_canceled))
                 }
             }
         } catch (illegalArgumentException: IllegalArgumentException) {
-            _downloadStatus.value = DownloadStatus.Canceled(context.getString(R.string.download_wrong_link))
+            _downloadStatus.value = DownloadStatus.DownloadCanceled(context.getString(R.string.download_wrong_link))
         } catch (exception: Exception) {
-            exception.localizedMessage?.let { _downloadStatus.value = DownloadStatus.Canceled(it) }
+            exception.localizedMessage?.let { _downloadStatus.value = DownloadStatus.DownloadCanceled(it) }
         }
     }
 
@@ -76,11 +80,11 @@ class DownloadRepositoryImpl(
         cursor.close()
 
         return when (status) {
-            STATUS_PAUSED     -> DownloadStatus.Canceled(context.getString(R.string.download_paused, reason))
-            STATUS_FAILED     -> DownloadStatus.Canceled(context.getString(R.string.download_failed, reason))
-            STATUS_RUNNING    -> DownloadStatus.Progress(percentage)
-            STATUS_SUCCESSFUL -> DownloadStatus.Completed(uri)
-            else              -> DownloadStatus.Canceled(reason)
+            STATUS_PAUSED     -> DownloadStatus.DownloadCanceled(context.getString(R.string.download_paused, reason))
+            STATUS_FAILED     -> DownloadStatus.DownloadCanceled(context.getString(R.string.download_failed, reason))
+            STATUS_RUNNING    -> DownloadStatus.DownloadProgress(percentage)
+            STATUS_SUCCESSFUL -> DownloadStatus.DownloadCompleted(uri)
+            else              -> DownloadStatus.DownloadCanceled(reason)
         }
     }
 
@@ -101,25 +105,28 @@ class DownloadRepositoryImpl(
     }
 
     override suspend fun writeFileToInternalStorage(uri: String) {
-        val file         = File(Uri.parse(uri).path)
-        val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
-        val inputStream  = file.inputStream()
+        val file = File(Uri.parse(uri).path)
 
-        inputStream.copyTo(outputStream)
+        if (file.exists()) {
+            val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
+            val inputStream  = file.inputStream()
 
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-        file.delete()
+            inputStream.copyTo(outputStream)
+
+            outputStream.flush()
+            outputStream.close()
+            inputStream.close()
+            file.delete()
+        } else _downloadStatus.value = DownloadStatus.DownloadCanceled("File deleted")
     }
 
     override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
 
     sealed class DownloadStatus {
-        object Idle                             : DownloadStatus()
-        data class Completed(val uri: String)   : DownloadStatus()
-        data class Progress(val progress: Int)  : DownloadStatus()
-        data class Canceled(val reason: String) : DownloadStatus()
+        object DownloadIdle                             : DownloadStatus()
+        data class DownloadCompleted(val uri: String)   : DownloadStatus()
+        data class DownloadProgress(val progress: Int)  : DownloadStatus()
+        data class DownloadCanceled(val reason: String) : DownloadStatus()
     }
 
     companion object DownloadConstant {

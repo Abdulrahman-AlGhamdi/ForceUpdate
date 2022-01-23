@@ -17,10 +17,10 @@ import com.android.forceupdate.databinding.ActivityForceUpdateBinding
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl.DownloadStatus.*
 import com.android.forceupdate.repository.install.InstallRepositoryImpl
-import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus.*
+import com.android.forceupdate.ui.ForceUpdateActivity.ForceUpdateState.*
 import com.android.forceupdate.util.showSnackBar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -29,10 +29,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private lateinit var binding   : ActivityForceUpdateBinding
     private lateinit var viewModel : ForceUpdateViewModel
 
-    /** force update jobs **/
-    private lateinit var downloadJob : Job
-    private lateinit var installJob  : Job
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityForceUpdateBinding.inflate(layoutInflater)
@@ -40,8 +36,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         init()
-        downloadJob = getDownloadStatus()
-        installJob  = getInstallStatus()
+        getDownloadStatus()
+        getInstallStatus()
     }
 
     private fun init() {
@@ -52,8 +48,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
 
         /** check if apk file is exist **/
-        if (viewModel.getLocalFile().exists()) getForceUpdateState(ForceUpdateState.Install())
-        else getForceUpdateState(ForceUpdateState.Ready())
+        if (viewModel.getLocalFile().exists()) getForceUpdateState(InstallReady())
+        else getForceUpdateState(DownloadReady())
     }
 
     private fun showPackageInfo() {
@@ -65,7 +61,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         val animation       = intent.getStringExtra(EXTRA_ANIMATION)
 
         binding.currentVersion.text  = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
-        binding.message.text         = getString(R.string.forceupdate_update_message, applicationName)
         binding.applicationName.text = applicationName
         binding.logo.setImageDrawable(applicationLogo)
 
@@ -89,9 +84,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.downloadStatus.collect {
             when (it) {
-                is Completed -> getForceUpdateState(ForceUpdateState.Install(it.uri))
-                is Canceled  -> getForceUpdateState(ForceUpdateState.Ready(it.reason))
-                is Progress  -> getForceUpdateState(ForceUpdateState.Download(it.progress))
+                is DownloadCompleted -> getForceUpdateState(InstallReady(it.uri))
+                is DownloadCanceled  -> getForceUpdateState(DownloadReady(it.reason))
+                is DownloadProgress  -> getForceUpdateState(Downloading(it.progress))
                 else -> Unit
             }
         }
@@ -100,20 +95,23 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun getInstallStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.installStatus.collect {
             when (it) {
-                InstallStatus.InstallSucceeded  -> finish()
-                InstallStatus.InstallCanceled   -> getForceUpdateState(ForceUpdateState.Install())
-                is InstallStatus.InstallFailure -> getForceUpdateState(ForceUpdateState.Ready(it.message))
+                InstallSucceeded  -> finish()
+                InstallProgress   -> getForceUpdateState(Installing)
+                InstallCanceled   -> getForceUpdateState(InstallReady())
+                is InstallFailure -> getForceUpdateState(DownloadReady(it.message))
                 else -> Unit
             }
         }
     }
 
     private fun getForceUpdateState(state: ForceUpdateState): Unit = when (state) {
-        is ForceUpdateState.Ready    -> {
-            if (::installJob.isInitialized) installJob.cancel()
+        is DownloadReady    -> {
+            val packageInfo     = packageManager.getPackageInfo(packageName, 0)
+            val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
 
             binding.button.visibility      = View.VISIBLE
             binding.progressBar.visibility = View.GONE
+            binding.message.text           = getString(R.string.forceupdate_update_message, applicationName)
             binding.button.text            = getString(R.string.forceupdate_update)
 
             val header  = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<*, *>
@@ -122,15 +120,13 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             state.message?.let { binding.root.showSnackBar(it) }
             binding.button.setOnClickListener { viewModel.downloadApk(apkLink!!, header) }
         }
-        is ForceUpdateState.Download -> {
+        is Downloading -> {
             binding.button.visibility      = View.GONE
             binding.progressBar.visibility = View.VISIBLE
-            binding.progressBar.progress   = state.progress
             binding.message.text           = getString(R.string.forceupdate_downloading, state.progress)
+            binding.progressBar.setProgress(state.progress, true)
         }
-        is ForceUpdateState.Install  -> {
-            if (::downloadJob.isInitialized) downloadJob.cancel()
-
+        is InstallReady  -> {
             binding.button.visibility       = View.VISIBLE
             binding.progressBar.visibility  = View.GONE
             binding.button.text             = getString(R.string.forceupdate_install)
@@ -139,14 +135,21 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             state.uri?.let { viewModel.writeFileToInternalStorage(it) }
             binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
         }
+        is Installing -> {
+            binding.button.visibility      = View.GONE
+            binding.progressBar.visibility = View.VISIBLE
+            binding.message.text           = getString(R.string.forceupdate_installing)
+            binding.progressBar.isIndeterminate = true
+        }
     }
 
     override fun onBackPressed() {}
 
     sealed class ForceUpdateState {
-        data class Ready(val message: String? = null) : ForceUpdateState()
-        data class Download(val progress: Int)        : ForceUpdateState()
-        data class Install(val uri: String? = null)   : ForceUpdateState()
+        data class DownloadReady(val message: String? = null) : ForceUpdateState()
+        data class Downloading(val progress: Int)             : ForceUpdateState()
+        data class InstallReady(val uri: String? = null)      : ForceUpdateState()
+        object Installing                                     : ForceUpdateState()
     }
 
     companion object {

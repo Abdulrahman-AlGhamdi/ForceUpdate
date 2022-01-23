@@ -44,7 +44,7 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
         return getBroadcast(context, 2, intent, FLAG_UPDATE_CURRENT or FLAG_MUTABLE)
     }
 
-    private fun startInstalling(localFile: File, pendingIntent: PendingIntent) {
+    private fun startInstalling(localFile: File, pendingIntent: PendingIntent) = if (localFile.exists()) {
         val packageInstaller = context.packageManager.packageInstaller
         val contentResolver  = context.contentResolver
 
@@ -61,10 +61,11 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
             session.commit(pendingIntent.intentSender)
             session.close()
         }
-    }
+    } else _installStatus.value = InstallStatus.InstallFailure("File deleted")
 
     sealed class InstallStatus: Parcelable {
         @Parcelize object InstallIdle                             : InstallStatus(), Parcelable
+        @Parcelize object InstallProgress                         : InstallStatus(), Parcelable
         @Parcelize object InstallCanceled                         : InstallStatus(), Parcelable
         @Parcelize object InstallSucceeded                        : InstallStatus(), Parcelable
         @Parcelize data class InstallFailure(val message: String) : InstallStatus(), Parcelable
