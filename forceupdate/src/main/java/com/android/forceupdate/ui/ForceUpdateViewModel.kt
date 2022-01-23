@@ -1,8 +1,11 @@
 package com.android.forceupdate.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.android.forceupdate.repository.install.InstallRepository
 import com.android.forceupdate.repository.download.DownloadRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 internal class ForceUpdateViewModel(
@@ -10,9 +13,16 @@ internal class ForceUpdateViewModel(
     private val installRepository: InstallRepository
 ) : ViewModel() {
 
-    fun downloadApk(apkUrl: String, header: Pair<String, String>?) = downloadRepository.downloadApk(apkUrl, header)
+    val downloadStatus = downloadRepository.downloadStatus
 
-    fun writeFileToInternalStorage(uri: String) = downloadRepository.writeFileToInternalStorage(uri)
+    fun downloadApk(
+        apkUrl: String,
+        header: Pair<*, *>?
+    ) = viewModelScope.launch(Dispatchers.IO) { downloadRepository.downloadApk(apkUrl, header) }
+
+    fun writeFileToInternalStorage(uri: String) = viewModelScope.launch(Dispatchers.IO) {
+        downloadRepository.writeFileToInternalStorage(uri)
+    }
 
     fun getLocalFile() = downloadRepository.getLocalFile()
 

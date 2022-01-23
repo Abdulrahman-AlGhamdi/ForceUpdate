@@ -8,24 +8,25 @@ import android.content.Context.MODE_PRIVATE
 import android.database.Cursor
 import android.net.Uri
 import com.android.forceupdate.R
-import com.android.forceupdate.repository.download.DownloadRepositoryImpl.DownloadStatus.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
 class DownloadRepositoryImpl(
     private val context: Context
 ) : DownloadRepository {
 
-    override fun downloadApk(apkLink: String, header: Pair<String,String>?) = flow {
+    private val _downloadStatus = MutableStateFlow<DownloadStatus>(DownloadStatus.Idle)
+    override val downloadStatus = _downloadStatus.asStateFlow()
+
+    override suspend fun downloadApk(apkLink: String, header: Pair<*, *>?) {
         try {
             val request = Request(Uri.parse(apkLink)).apply {
                 this.setAllowedOverRoaming(true)
                 this.setAllowedOverMetered(true)
                 this.setNotificationVisibility(Request.VISIBILITY_VISIBLE)
                 this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
-                header?.let { this.addRequestHeader(header.first, header.second) }
+                header?.let { this.addRequestHeader(header.first as String, header.second as String) }
             }
 
             val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
@@ -36,19 +37,19 @@ class DownloadRepositoryImpl(
                 val cursor = downloadManager.query(query)
                 if (cursor != null && cursor.count >= 0 && cursor.moveToFirst()) {
                     val downloadStatus = getDownloadStatus(cursor)
-                    this.emit(downloadStatus)
-                    if (downloadStatus !is Progress) isDownloading = false
+                    _downloadStatus.value = downloadStatus
+                    if (downloadStatus !is DownloadStatus.Progress) isDownloading = false
                 } else {
                     isDownloading = false
-                    this.emit(Canceled(context.getString(R.string.download_canceled)))
+                    _downloadStatus.value = DownloadStatus.Canceled(context.getString(R.string.download_canceled))
                 }
             }
         } catch (illegalArgumentException: IllegalArgumentException) {
-            this@flow.emit(Canceled(context.getString(R.string.download_wrong_link)))
+            _downloadStatus.value = DownloadStatus.Canceled(context.getString(R.string.download_wrong_link))
         } catch (exception: Exception) {
-            exception.localizedMessage?.let { this@flow.emit(Canceled(it)) }
+            exception.localizedMessage?.let { _downloadStatus.value = DownloadStatus.Canceled(it) }
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
     private fun getDownloadQuery(request: Request, downloadManager: DownloadManager): Query {
         val sharedPreferences = context.getSharedPreferences(DOWNLOAD_ID_NAME, MODE_PRIVATE)
@@ -74,33 +75,31 @@ class DownloadRepositoryImpl(
         val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
 
         return when (status) {
-            STATUS_PAUSED     -> Canceled(context.getString(R.string.download_paused, reason))
-            STATUS_FAILED     -> Canceled(context.getString(R.string.download_failed, reason))
-            STATUS_RUNNING    -> Progress(percentage)
-            STATUS_SUCCESSFUL -> Completed(uri)
-            else              -> Canceled(reason)
+            STATUS_PAUSED     -> DownloadStatus.Canceled(context.getString(R.string.download_paused, reason))
+            STATUS_FAILED     -> DownloadStatus.Canceled(context.getString(R.string.download_failed, reason))
+            STATUS_RUNNING    -> DownloadStatus.Progress(percentage)
+            STATUS_SUCCESSFUL -> DownloadStatus.Completed(uri)
+            else              -> DownloadStatus.Canceled(reason)
         }
     }
 
-    private fun getReason(reasonCode: Int): String {
-        return when (reasonCode) {
-            1    -> "Waiting to Retry"
-            2    -> "Waiting for Network"
-            3    -> "Queued for WIFI"
-            4    -> "Unknown"
-            1001 -> "File Error"
-            1002 -> "Unhandled HTTP Code"
-            1004 -> "HTTP Data Error"
-            1005 -> "Too Many Redirects"
-            1006 -> "Insufficient Space"
-            1007 -> "Device Not Found"
-            1008 -> "Cannot Resume"
-            1009 -> "File Already Exists"
-            else -> "Undefined"
-        }
+    private fun getReason(reasonCode: Int) = when (reasonCode) {
+        1    -> "Waiting to Retry"
+        2    -> "Waiting for Network"
+        3    -> "Queued for WIFI"
+        4    -> "Unknown"
+        1001 -> "File Error"
+        1002 -> "Unhandled HTTP Code"
+        1004 -> "HTTP Data Error"
+        1005 -> "Too Many Redirects"
+        1006 -> "Insufficient Space"
+        1007 -> "Device Not Found"
+        1008 -> "Cannot Resume"
+        1009 -> "File Already Exists"
+        else -> "Undefined"
     }
 
-    override fun writeFileToInternalStorage(uri: String) {
+    override suspend fun writeFileToInternalStorage(uri: String) {
         val file         = File(Uri.parse(uri).path)
         val outputStream = context.openFileOutput(file.name, MODE_PRIVATE)
         val inputStream  = file.inputStream()
@@ -116,6 +115,7 @@ class DownloadRepositoryImpl(
     override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
 
     sealed class DownloadStatus {
+        object Idle                             : DownloadStatus()
         data class Completed(val uri: String)   : DownloadStatus()
         data class Progress(val progress: Int)  : DownloadStatus()
         data class Canceled(val reason: String) : DownloadStatus()
