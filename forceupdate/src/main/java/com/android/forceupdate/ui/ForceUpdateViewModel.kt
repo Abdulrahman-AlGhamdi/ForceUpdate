@@ -14,6 +14,7 @@ internal class ForceUpdateViewModel(
 ) : ViewModel() {
 
     val downloadStatus = downloadRepository.downloadStatus
+    val installStatus  = installRepository.installStatus
 
     fun downloadApk(
         apkUrl: String,
@@ -26,5 +27,7 @@ internal class ForceUpdateViewModel(
 
     fun getLocalFile() = downloadRepository.getLocalFile()
 
-    fun installApk(localFile: File) = installRepository.installApk(localFile)
+    fun installApk(localFile: File) = viewModelScope.launch(Dispatchers.IO) {
+        installRepository.installApk(localFile)
+    }
 }
