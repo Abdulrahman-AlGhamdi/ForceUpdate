@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 24
-        targetSdkVersion 31
+        targetSdkVersion 30
         consumerProguardFiles "consumer-rules.pro"
     }
     buildTypes {
@@ -24,12 +24,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-    buildFeatures {
-        viewBinding true
-    }
+    kotlinOptions { jvmTarget = '1.8' }
+    buildFeatures { viewBinding true }
 }
 
 dependencies {
