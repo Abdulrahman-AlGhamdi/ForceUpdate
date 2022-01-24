@@ -41,7 +41,7 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
             })
         }
 
-        return getBroadcast(context, 2, intent, FLAG_UPDATE_CURRENT or FLAG_MUTABLE)
+        return getBroadcast(context, 2, intent, FLAG_UPDATE_CURRENT)
     }
 
     private fun startInstalling(localFile: File, pendingIntent: PendingIntent) = if (localFile.exists()) {
