@@ -121,6 +121,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.setOnClickListener { viewModel.downloadApk(apkLink!!, header) }
         }
         is Downloading -> {
+            binding.progressBar.isIndeterminate = false
             binding.button.visibility      = View.GONE
             binding.progressBar.visibility = View.VISIBLE
             binding.message.text           = getString(R.string.forceupdate_downloading, state.progress)
@@ -136,10 +137,10 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
         }
         is Installing -> {
+            binding.progressBar.isIndeterminate = true
             binding.button.visibility      = View.GONE
             binding.progressBar.visibility = View.VISIBLE
             binding.message.text           = getString(R.string.forceupdate_installing)
-            binding.progressBar.isIndeterminate = true
         }
     }
 
