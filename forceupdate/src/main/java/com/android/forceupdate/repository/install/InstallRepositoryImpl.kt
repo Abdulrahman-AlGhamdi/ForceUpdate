@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.*
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.S
 import androidx.core.net.toUri
 import com.android.forceupdate.broadcast.InstallBroadcastReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +43,8 @@ internal class InstallRepositoryImpl(private val context: Context) : InstallRepo
             })
         }
 
-        return getBroadcast(context, 2, intent, FLAG_UPDATE_CURRENT)
+        return if (SDK_INT <= S) getBroadcast(context, 2, intent, FLAG_UPDATE_CURRENT)
+        else getBroadcast(context, 2, intent, FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT)
     }
 
     private fun startInstalling(localFile: File, pendingIntent: PendingIntent) = if (localFile.exists()) {
