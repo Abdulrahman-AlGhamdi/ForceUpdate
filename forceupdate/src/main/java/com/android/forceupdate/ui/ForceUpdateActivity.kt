@@ -3,8 +3,6 @@ package com.android.forceupdate.ui
 import android.content.pm.PackageInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.P
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -20,6 +18,7 @@ import com.android.forceupdate.repository.download.DownloadRepositoryImpl.Downlo
 import com.android.forceupdate.repository.install.InstallRepositoryImpl
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus.*
 import com.android.forceupdate.ui.ForceUpdateActivity.ForceUpdateState.*
+import com.android.forceupdate.util.getAppVersion
 import com.android.forceupdate.util.showSnackBar
 import com.android.forceupdate.util.viewBinding
 import kotlinx.coroutines.Dispatchers
@@ -56,32 +55,10 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
         binding.logo.setImageDrawable(applicationLogo)
         binding.applicationName.text = applicationName
-        binding.currentVersion.text = getAppVersion()
-        binding.optional.visibility = getIsOptional()
+        binding.currentVersion.text = packageInfo.getAppVersion(this)
+        binding.optional.visibility = viewModel.getIsOptional(intent)
         binding.optional.setOnClickListener { finish() }
-        binding.animation.setAnimation(getForceUpdateAnimation())
-
-        if (viewModel.getLocalFile().exists()) getForceUpdateState(InstallReady())
-        else getForceUpdateState(DownloadReady())
-    }
-
-    private fun getAppVersion(): String {
-        val versionName = packageInfo.versionName
-        val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
-        val appVersion = "$versionCode ($versionName)"
-
-        return getString(R.string.forceupdate_current_version, appVersion)
-    }
-
-    private fun getForceUpdateAnimation(): String {
-        val animation = intent.getStringExtra(EXTRA_ANIMATION)
-
-        return if (!animation.isNullOrEmpty() && animation.endsWith(".json")) animation
-        else "force_update_animation.json"
-    }
-
-    private fun getIsOptional(): Int {
-        val isOptional = intent.getBooleanExtra(EXTRA_OPTIONAL_DOWNLOAD, false)
+        binding.animation.setAnimation(viewModel.getForceUpdateAnimation(intent))
 
         obtainStyledAttributes(TypedValue().data, intArrayOf(R.attr.colorPrimary)).use {
             val color = it.getColor(0, 0)
@@ -90,7 +67,8 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             ImageViewCompat.setImageTintList(binding.optional, ColorStateList.valueOf(color))
         }
 
-        return if (isOptional) View.VISIBLE else View.GONE
+        if (viewModel.getLocalFile().exists()) getForceUpdateState(InstallReady())
+        else getForceUpdateState(DownloadReady())
     }
 
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
@@ -117,13 +95,13 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     }
 
     private fun getForceUpdateState(state: ForceUpdateState): Unit = when (state) {
-        is DownloadReady    -> {
+        is DownloadReady -> {
             binding.button.visibility = View.VISIBLE
             binding.progressBar.visibility = View.GONE
             binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
             binding.button.text = getString(R.string.forceupdate_update)
 
-            val header  = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<*, *>
+            val header = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<*, *>
             val apkLink = intent.getStringExtra(EXTRA_APK_LINK)
 
             state.message?.let { binding.root.showSnackBar(it) }
@@ -136,9 +114,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.message.text = getString(R.string.forceupdate_downloading, state.progress)
             binding.progressBar.setProgress(state.progress, true)
         }
-        is InstallReady  -> {
+        is InstallReady -> {
             binding.button.visibility = View.VISIBLE
-            binding.progressBar.visibility  = View.GONE
+            binding.progressBar.visibility = View.GONE
             binding.button.text = getString(R.string.forceupdate_install)
             binding.message.text = getString(R.string.forceupdate_download_completed)
 
