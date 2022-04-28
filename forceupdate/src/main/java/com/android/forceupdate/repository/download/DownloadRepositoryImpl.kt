@@ -19,39 +19,26 @@ class DownloadRepositoryImpl(
     override val downloadStatus = _downloadStatus.asStateFlow()
 
     private val downloadManager = context.getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+    private val sharedPreferences = context.getSharedPreferences(DOWNLOAD_ID_NAME, MODE_PRIVATE)
 
     override suspend fun downloadApk(apkLink: String, header: Pair<*, *>?) = try {
-        val request = DownloadManager.Request(Uri.parse(apkLink)).apply {
+        DownloadManager.Request(Uri.parse(apkLink)).apply {
             this.setAllowedOverRoaming(true)
             this.setAllowedOverMetered(true)
             this.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
             this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
             header?.let { this.addRequestHeader(header.first as String, header.second as String) }
+        }.let { request ->
+            val newDownloadId = downloadManager.enqueue(request)
+            val query = DownloadManager.Query().setFilterById(newDownloadId)
+            sharedPreferences.edit().putLong(DOWNLOAD_ID_KEY, newDownloadId).apply()
+            do getDownloadStatus(query) while (_downloadStatus.value is DownloadProgress)
         }
-
-        val query = getDownloadQuery(request)
-        do getDownloadStatus(query) while (_downloadStatus.value is DownloadProgress)
-
     } catch (illegalArgumentException: IllegalArgumentException) {
         _downloadStatus.value = DownloadCanceled(context.getString(R.string.download_wrong_link))
     } catch (exception: Exception) {
         exception.localizedMessage?.let { _downloadStatus.value = DownloadCanceled(it) }
         exception.printStackTrace()
-    }
-
-    private fun getDownloadQuery(request: DownloadManager.Request): DownloadManager.Query {
-        val sharedPreferences = context.getSharedPreferences(DOWNLOAD_ID_NAME, MODE_PRIVATE)
-        val oldDownloadId = sharedPreferences.getLong(DOWNLOAD_ID_KEY, -1L)
-        val newDownloadId = downloadManager.enqueue(request)
-        val query = DownloadManager.Query().setFilterById(newDownloadId)
-
-        sharedPreferences.edit().apply {
-            downloadManager.remove(oldDownloadId)
-            this.putLong(DOWNLOAD_ID_KEY, newDownloadId)
-            this.apply()
-        }
-
-        return query
     }
 
     private fun getDownloadStatus(query: DownloadManager.Query) {
@@ -75,16 +62,18 @@ class DownloadRepositoryImpl(
         val bytes = cursor.getInt(bytesDownloaded)
         cursor.close()
 
-        val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
-        val message = context.getString(R.string.download_paused, reasonMessage)
-
         when (status) {
-            DownloadManager.STATUS_PAUSED -> _downloadStatus.value = DownloadCanceled(message)
-            DownloadManager.STATUS_FAILED -> _downloadStatus.value = DownloadCanceled(message)
-            DownloadManager.STATUS_PENDING -> _downloadStatus.value = DownloadProgress(0)
-            DownloadManager.STATUS_RUNNING -> _downloadStatus.value = DownloadProgress(percentage)
+            DownloadManager.STATUS_PENDING, DownloadManager.STATUS_RUNNING -> {
+                val percentage = ((bytes.toDouble() / totalSize) * 100).toInt()
+                _downloadStatus.value = DownloadProgress(percentage)
+            }
+            DownloadManager.STATUS_PAUSED, DownloadManager.STATUS_FAILED -> {
+                val oldDownloadId = sharedPreferences.getLong(DOWNLOAD_ID_KEY, -1L)
+                downloadManager.remove(oldDownloadId)
+                val message = context.getString(R.string.download_failed, reasonMessage)
+                _downloadStatus.value = DownloadCanceled(message)
+            }
             DownloadManager.STATUS_SUCCESSFUL -> writeFileToInternalStorage(localUri)
-            else -> _downloadStatus.value = DownloadCanceled(reasonMessage)
         }
     }
 
