@@ -23,10 +23,6 @@ internal class ForceUpdateViewModel(
         header: Pair<*, *>?
     ) = viewModelScope.launch(Dispatchers.IO) { downloadRepository.downloadApk(apkUrl, header) }
 
-    fun writeFileToInternalStorage(uri: String) = viewModelScope.launch(Dispatchers.IO) {
-        downloadRepository.writeFileToInternalStorage(uri)
-    }
-
     fun getLocalFile() = downloadRepository.getLocalFile()
 
     fun installApk(localFile: File) = viewModelScope.launch(Dispatchers.IO) {

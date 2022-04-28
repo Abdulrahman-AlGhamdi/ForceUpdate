@@ -74,7 +74,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.downloadStatus.collect {
             when (it) {
-                is DownloadCompleted -> getForceUpdateState(InstallReady(it.uri))
+                is DownloadCompleted -> getForceUpdateState(InstallReady())
                 is DownloadProgress -> getForceUpdateState(Downloading(it.progress))
                 is DownloadCanceled -> getForceUpdateState(DownloadReady(it.reason))
                 else -> Unit
@@ -108,10 +108,10 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.setOnClickListener { viewModel.downloadApk(apkLink!!, header) }
         }
         is Downloading -> {
-            binding.button.visibility = View.GONE
-            binding.progressBar.isIndeterminate = false
-            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.isIndeterminate = state.progress == 0
             binding.message.text = getString(R.string.forceupdate_downloading, state.progress)
+            binding.button.visibility = View.GONE
+            binding.progressBar.visibility = View.VISIBLE
             binding.progressBar.setProgress(state.progress, true)
         }
         is InstallReady -> {
@@ -120,7 +120,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.text = getString(R.string.forceupdate_install)
             binding.message.text = getString(R.string.forceupdate_download_completed)
 
-            state.uri?.let { viewModel.writeFileToInternalStorage(it) }
             binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
         }
         is Installing -> {
