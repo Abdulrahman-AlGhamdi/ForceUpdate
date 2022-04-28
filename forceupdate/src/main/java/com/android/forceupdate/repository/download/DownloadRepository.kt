@@ -10,7 +10,5 @@ interface DownloadRepository {
 
     suspend fun downloadApk(apkLink: String, header: Pair<*, *>?)
 
-    suspend fun writeFileToInternalStorage(uri: String)
-
     fun getLocalFile() : File
 }
