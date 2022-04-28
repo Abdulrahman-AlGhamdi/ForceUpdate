@@ -14,7 +14,6 @@
     <string name="forceupdate_dialog_message">حدث خطأ أثناء عملية التحقق من بياناتك.</string>
 
     // Download Messages
-    <string name="download_paused">توقف التحميل: %s</string>
     <string name="download_failed">فشل التحميل: %s</string>
     <string name="download_canceled">تم إلغاء التحميل</string>
     <string name="download_wrong_link">خطأ في الرابط</string>
