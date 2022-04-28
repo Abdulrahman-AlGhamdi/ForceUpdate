@@ -1,5 +1,6 @@
 package com.android.forceupdate.ui
 
+import android.content.pm.PackageInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build.VERSION.SDK_INT
@@ -20,18 +21,21 @@ import com.android.forceupdate.repository.install.InstallRepositoryImpl
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus.*
 import com.android.forceupdate.ui.ForceUpdateActivity.ForceUpdateState.*
 import com.android.forceupdate.util.showSnackBar
+import com.android.forceupdate.util.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 internal class ForceUpdateActivity : AppCompatActivity() {
 
-    private lateinit var binding   : ActivityForceUpdateBinding
-    private lateinit var viewModel : ForceUpdateViewModel
+    private val binding by viewBinding(ActivityForceUpdateBinding::inflate)
+    private lateinit var viewModel: ForceUpdateViewModel
+
+    private lateinit var packageInfo: PackageInfo
+    private lateinit var applicationName: CharSequence
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityForceUpdateBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
 
@@ -41,35 +45,43 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        showPackageInfo()
+        packageInfo = packageManager.getPackageInfo(packageName, 0)
+        applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
+        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
 
-        /** init view model **/
-        val factory = ForceUpdateProviderFactory(DownloadRepositoryImpl(this), InstallRepositoryImpl(this))
+        val installRepository = InstallRepositoryImpl(this)
+        val downloadRepository = DownloadRepositoryImpl(this)
+        val factory = ForceUpdateProviderFactory(downloadRepository, installRepository)
         viewModel = ViewModelProvider(this, factory)[ForceUpdateViewModel::class.java]
 
-        /** check if apk file is exist **/
+        binding.logo.setImageDrawable(applicationLogo)
+        binding.applicationName.text = applicationName
+        binding.currentVersion.text = getAppVersion()
+        binding.optional.visibility = getIsOptional()
+        binding.optional.setOnClickListener { finish() }
+        binding.animation.setAnimation(getForceUpdateAnimation())
+
         if (viewModel.getLocalFile().exists()) getForceUpdateState(InstallReady())
         else getForceUpdateState(DownloadReady())
     }
 
-    private fun showPackageInfo() {
-        val packageInfo     = packageManager.getPackageInfo(packageName, 0)
-        val versionName     = packageInfo.versionName
-        val versionCode     = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
-        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
-        val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
-        val animation       = intent.getStringExtra(EXTRA_ANIMATION)
+    private fun getAppVersion(): String {
+        val versionName = packageInfo.versionName
+        val versionCode = if (SDK_INT >= P) packageInfo.longVersionCode else packageInfo.versionCode
+        val appVersion = "$versionCode ($versionName)"
 
-        binding.currentVersion.text  = getString(R.string.forceupdate_current_version, versionCode.toString(), versionName)
-        binding.applicationName.text = applicationName
-        binding.logo.setImageDrawable(applicationLogo)
+        return getString(R.string.forceupdate_current_version, appVersion)
+    }
 
-        if (intent.getBooleanExtra(EXTRA_OPTIONAL_DOWNLOAD, false))
-            binding.optional.visibility = View.VISIBLE else binding.optional.visibility = View.GONE
+    private fun getForceUpdateAnimation(): String {
+        val animation = intent.getStringExtra(EXTRA_ANIMATION)
 
-        if (!animation.isNullOrEmpty() && animation.endsWith(".json"))
-            binding.animation.setAnimation(animation)
-        else binding.animation.setAnimation("force_update_animation.json")
+        return if (!animation.isNullOrEmpty() && animation.endsWith(".json")) animation
+        else "force_update_animation.json"
+    }
+
+    private fun getIsOptional(): Int {
+        val isOptional = intent.getBooleanExtra(EXTRA_OPTIONAL_DOWNLOAD, false)
 
         obtainStyledAttributes(TypedValue().data, intArrayOf(R.attr.colorPrimary)).use {
             val color = it.getColor(0, 0)
@@ -78,15 +90,15 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             ImageViewCompat.setImageTintList(binding.optional, ColorStateList.valueOf(color))
         }
 
-        binding.optional.setOnClickListener { finish() }
+        return if (isOptional) View.VISIBLE else View.GONE
     }
 
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.downloadStatus.collect {
             when (it) {
                 is DownloadCompleted -> getForceUpdateState(InstallReady(it.uri))
-                is DownloadCanceled  -> getForceUpdateState(DownloadReady(it.reason))
-                is DownloadProgress  -> getForceUpdateState(Downloading(it.progress))
+                is DownloadProgress -> getForceUpdateState(Downloading(it.progress))
+                is DownloadCanceled -> getForceUpdateState(DownloadReady(it.reason))
                 else -> Unit
             }
         }
@@ -95,9 +107,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun getInstallStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.installStatus.collect {
             when (it) {
-                InstallSucceeded  -> finish()
-                InstallProgress   -> getForceUpdateState(Installing)
-                InstallCanceled   -> getForceUpdateState(InstallReady())
+                InstallSucceeded -> finish()
+                InstallProgress -> getForceUpdateState(Installing)
+                InstallCanceled -> getForceUpdateState(InstallReady())
                 is InstallFailure -> getForceUpdateState(DownloadReady(it.message))
                 else -> Unit
             }
@@ -106,13 +118,10 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     private fun getForceUpdateState(state: ForceUpdateState): Unit = when (state) {
         is DownloadReady    -> {
-            val packageInfo     = packageManager.getPackageInfo(packageName, 0)
-            val applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
-
-            binding.button.visibility      = View.VISIBLE
+            binding.button.visibility = View.VISIBLE
             binding.progressBar.visibility = View.GONE
-            binding.message.text           = getString(R.string.forceupdate_update_message, applicationName)
-            binding.button.text            = getString(R.string.forceupdate_update)
+            binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
+            binding.button.text = getString(R.string.forceupdate_update)
 
             val header  = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<*, *>
             val apkLink = intent.getStringExtra(EXTRA_APK_LINK)
@@ -121,42 +130,42 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.setOnClickListener { viewModel.downloadApk(apkLink!!, header) }
         }
         is Downloading -> {
+            binding.button.visibility = View.GONE
             binding.progressBar.isIndeterminate = false
-            binding.button.visibility      = View.GONE
             binding.progressBar.visibility = View.VISIBLE
-            binding.message.text           = getString(R.string.forceupdate_downloading, state.progress)
+            binding.message.text = getString(R.string.forceupdate_downloading, state.progress)
             binding.progressBar.setProgress(state.progress, true)
         }
         is InstallReady  -> {
-            binding.button.visibility       = View.VISIBLE
+            binding.button.visibility = View.VISIBLE
             binding.progressBar.visibility  = View.GONE
-            binding.button.text             = getString(R.string.forceupdate_install)
-            binding.message.text            = getString(R.string.forceupdate_download_completed)
+            binding.button.text = getString(R.string.forceupdate_install)
+            binding.message.text = getString(R.string.forceupdate_download_completed)
 
             state.uri?.let { viewModel.writeFileToInternalStorage(it) }
             binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
         }
         is Installing -> {
+            binding.button.visibility = View.GONE
             binding.progressBar.isIndeterminate = true
-            binding.button.visibility      = View.GONE
             binding.progressBar.visibility = View.VISIBLE
-            binding.message.text           = getString(R.string.forceupdate_installing)
+            binding.message.text = getString(R.string.forceupdate_installing)
         }
     }
 
-    override fun onBackPressed() {}
+    override fun onBackPressed() = Unit
 
     sealed class ForceUpdateState {
+        object Installing : ForceUpdateState()
+        data class Downloading(val progress: Int) : ForceUpdateState()
+        data class InstallReady(val uri: String? = null) : ForceUpdateState()
         data class DownloadReady(val message: String? = null) : ForceUpdateState()
-        data class Downloading(val progress: Int)             : ForceUpdateState()
-        data class InstallReady(val uri: String? = null)      : ForceUpdateState()
-        object Installing                                     : ForceUpdateState()
     }
 
     companion object {
-        const val EXTRA_APK_LINK          = "link"
-        const val EXTRA_HEADER            = "header"
-        const val EXTRA_ANIMATION         = "animation"
+        const val EXTRA_HEADER = "header"
+        const val EXTRA_APK_LINK = "link"
+        const val EXTRA_ANIMATION = "animation"
         const val EXTRA_OPTIONAL_DOWNLOAD = "optional"
     }
 }

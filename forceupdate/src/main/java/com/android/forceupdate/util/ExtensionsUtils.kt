@@ -1,12 +1,19 @@
 package com.android.forceupdate.util
 
 import android.app.Activity
-import android.app.ActivityManager
-import android.content.Context
+import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.viewbinding.ViewBinding
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
+
+inline fun <T : ViewBinding> AppCompatActivity.viewBinding(
+    crossinline bindingInflater: (LayoutInflater) -> T
+) = lazy(LazyThreadSafetyMode.NONE) {
+    bindingInflater.invoke(layoutInflater)
+}
 
 fun View.showSnackBar(
     message: String,
@@ -35,9 +42,4 @@ fun File.getSize(fileSize: Long): String {
         fileSizeInMB < 1 -> "$fileSizeInKB KB"
         else -> "$fileSizeInMB MB"
     }
-}
-
-fun Context.clearApplicationUserData() {
-    val activityManager = applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    activityManager.clearApplicationUserData()
 }

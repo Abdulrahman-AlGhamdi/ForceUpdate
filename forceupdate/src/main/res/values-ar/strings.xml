@@ -9,7 +9,7 @@
     <string name="forceupdate_canceled">تم إلغاء التحميل</string>
     <string name="forceupdate_downloading">جاري التحميل… %1$d%%</string>
     <string name="forceupdate_download_completed">انتهى التحميل</string>
-    <string name="forceupdate_current_version">النسخة الحالية: (%2$s) | %1$s</string>
+    <string name="forceupdate_current_version">النسخة الحالية: %s</string>
     <string name="forceupdate_update_message">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
     <string name="forceupdate_dialog_message">حدث خطأ أثناء عملية التحقق من بياناتك.</string>
 
