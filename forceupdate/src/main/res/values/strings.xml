@@ -8,7 +8,7 @@
     <string name="forceupdate_installing">Installing…</string>
     <string name="forceupdate_downloading">Downloading… %1$d%%</string>
     <string name="forceupdate_download_completed">Download completed</string>
-    <string name="forceupdate_current_version">Current Version: %1$s (%2$s)</string>
+    <string name="forceupdate_current_version">Current Version: %s</string>
     <string name="forceupdate_update_message">Dear user, a new %1$s update has been released.</string>
     <string name="forceupdate_dialog_message">An error was encountered while checking your credentials.</string>
 
