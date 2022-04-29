@@ -12,6 +12,8 @@
     <string name="forceupdate_current_version">النسخة الحالية: %s</string>
     <string name="forceupdate_update_message">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
     <string name="forceupdate_dialog_message">حدث خطأ أثناء عملية التحقق من بياناتك.</string>
+    <string name="forceupdate_permission_message">حتى تستطيع تحميل وتثبيت التحديث, من فضلك قم بالسماح لتطبيق %s الإذن في تثبيت التطبيقات.</string>
+    <string name="forceupdate_permission_ok">السماح بالتثبيت</string>
 
     <!-- Download Messages -->
     <string name="download_failed">فشل التحميل: %s</string>
