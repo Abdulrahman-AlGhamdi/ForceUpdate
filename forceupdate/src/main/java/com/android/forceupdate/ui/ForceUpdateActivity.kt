@@ -1,11 +1,16 @@
 package com.android.forceupdate.ui
 
+import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.use
 import androidx.core.widget.ImageViewCompat
@@ -26,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
+
 internal class ForceUpdateActivity : AppCompatActivity() {
 
     private val binding by viewBinding(ActivityForceUpdateBinding::inflate)
@@ -33,6 +39,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
     private lateinit var packageInfo: PackageInfo
     private lateinit var applicationName: CharSequence
+    private lateinit var applicationLogo: Drawable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +54,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun init() {
         packageInfo = packageManager.getPackageInfo(packageName, 0)
         applicationName = packageManager.getApplicationLabel(packageInfo.applicationInfo)
-        val applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
+        applicationLogo = packageManager.getApplicationIcon(packageInfo.packageName)
 
         val installRepository = InstallRepositoryImpl(this)
         val downloadRepository = DownloadRepositoryImpl(this)
@@ -70,6 +77,19 @@ internal class ForceUpdateActivity : AppCompatActivity() {
 
         if (viewModel.getApkFile().exists()) setForceUpdateView(InstallReady())
         else setForceUpdateView(DownloadReady())
+    }
+
+    private fun checkPackageInstallPermission(action: () -> (Any)) {
+        if (!packageManager.canRequestPackageInstalls()) AlertDialog.Builder(this).apply {
+            this.setTitle(applicationName)
+            this.setIcon(applicationLogo)
+            this.setMessage(getString(R.string.forceupdate_permission_message, applicationName))
+            this.setPositiveButton(R.string.forceupdate_permission_ok) { _, _ ->
+                val settings = Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
+                startActivity(Intent(settings, Uri.parse("package:$packageName")))
+            }
+            this.show()
+        } else action()
     }
 
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
@@ -101,12 +121,14 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.progressBar.visibility = View.GONE
             binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
             binding.button.text = getString(R.string.forceupdate_update)
+            state.message?.let { binding.root.showSnackBar(it) }
 
             val header = intent.getSerializableExtra(ConstantsUtils.EXTRA_HEADER) as? Pair<*, *>
             val apkLink = intent.getStringExtra(ConstantsUtils.EXTRA_APK_LINK) ?: ""
 
-            state.message?.let { binding.root.showSnackBar(it) }
-            binding.button.setOnClickListener { viewModel.downloadApk(apkLink, header) }
+            binding.button.setOnClickListener {
+                checkPackageInstallPermission { viewModel.downloadApk(apkLink, header) }
+            }
         }
         is Downloading -> {
             binding.progressBar.isIndeterminate = state.progress == 0
@@ -121,7 +143,9 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.text = getString(R.string.forceupdate_install)
             binding.message.text = getString(R.string.forceupdate_download_completed)
 
-            binding.button.setOnClickListener { viewModel.installApk() }
+            binding.button.setOnClickListener {
+                checkPackageInstallPermission { viewModel.installApk() }
+            }
         }
         is Installing -> {
             binding.button.visibility = View.GONE
