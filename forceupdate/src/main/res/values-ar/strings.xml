@@ -13,8 +13,11 @@
     <string name="forceupdate_update_message">عزيزي مستخدم %1$s، صدر تحديث جديد.</string>
     <string name="forceupdate_dialog_message">حدث خطأ أثناء عملية التحقق من بياناتك.</string>
 
-    // Download Messages
+    <!-- Download Messages -->
     <string name="download_failed">فشل التحميل: %s</string>
     <string name="download_canceled">تم إلغاء التحميل</string>
     <string name="download_wrong_link">خطأ في الرابط</string>
+
+    <!-- Install Messages -->
+    <string name="install_failed">فشل التثبيت: الملف محذوف</string>
 </resources>
