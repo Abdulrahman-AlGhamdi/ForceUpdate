@@ -12,8 +12,12 @@
     <string name="forceupdate_update_message">Dear user, a new %1$s update has been released.</string>
     <string name="forceupdate_dialog_message">An error was encountered while checking your credentials.</string>
 
-    // Download Messages
+    <!-- Download Messages -->
     <string name="download_failed">Download Failed: %s</string>
     <string name="download_canceled">Download Canceled</string>
     <string name="download_wrong_link">Incorrect Link</string>
+
+    <!-- Install Messages-->
+    <string name="install_failed">Install Failed: file deleted</string>
+
 </resources>

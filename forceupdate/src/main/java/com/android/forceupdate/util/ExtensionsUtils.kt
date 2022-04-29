@@ -22,7 +22,7 @@ inline fun <T : ViewBinding> AppCompatActivity.viewBinding(
 
 fun View.showSnackBar(
     message: String,
-    length: Int = Snackbar.LENGTH_SHORT,
+    length: Int = Snackbar.LENGTH_LONG,
     anchorView: Int? = null,
     actionMessage: String? = null,
     action: (View) -> Unit = {}

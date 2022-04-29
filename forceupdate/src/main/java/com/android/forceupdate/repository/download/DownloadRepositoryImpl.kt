@@ -7,6 +7,7 @@ import android.content.Context.MODE_PRIVATE
 import android.net.Uri
 import com.android.forceupdate.R
 import com.android.forceupdate.repository.download.DownloadRepositoryImpl.DownloadStatus.*
+import com.android.forceupdate.util.ConstantsUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
@@ -26,7 +27,7 @@ class DownloadRepositoryImpl(
             this.setAllowedOverRoaming(true)
             this.setAllowedOverMetered(true)
             this.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-            this.setDestinationInExternalFilesDir(context, null, APK_FILE_NAME)
+            this.setDestinationInExternalFilesDir(context, null, ConstantsUtils.APK_FILE_NAME)
             header?.let { this.addRequestHeader(header.first as String, header.second as String) }
         }.let { request ->
             val newDownloadId = downloadManager.enqueue(request)
@@ -73,7 +74,7 @@ class DownloadRepositoryImpl(
                 val message = context.getString(R.string.download_failed, reasonMessage)
                 _downloadStatus.value = DownloadCanceled(message)
             }
-            DownloadManager.STATUS_SUCCESSFUL -> writeFileToInternalStorage(localUri)
+            DownloadManager.STATUS_SUCCESSFUL -> writeApkFileToInternalStorage(localUri)
         }
     }
 
@@ -91,14 +92,14 @@ class DownloadRepositoryImpl(
         DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Device not found"
         DownloadManager.ERROR_CANNOT_RESUME -> "Cannot resume"
         DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "File already exists"
-        else -> "Undefined reason"
+        else -> "Undefined reason ($reasonCode)"
     }
 
-    private fun writeFileToInternalStorage(uri: String) {
+    private fun writeApkFileToInternalStorage(uri: String) {
         val uriPath = Uri.parse(uri)?.path ?: ""
         val file = File(uriPath)
 
-        val outputStream = context.openFileOutput(APK_FILE_NAME, MODE_PRIVATE)
+        val outputStream = context.openFileOutput(ConstantsUtils.APK_FILE_NAME, MODE_PRIVATE)
         val inputStream = file.inputStream()
 
         inputStream.copyTo(outputStream)
@@ -111,7 +112,7 @@ class DownloadRepositoryImpl(
         _downloadStatus.value = DownloadCompleted
     }
 
-    override fun getLocalFile() = File(context.filesDir, APK_FILE_NAME)
+    override fun getApkFile() = File(context.filesDir, ConstantsUtils.APK_FILE_NAME)
 
     sealed class DownloadStatus {
         object DownloadIdle : DownloadStatus()
@@ -121,7 +122,6 @@ class DownloadRepositoryImpl(
     }
 
     private companion object DownloadConstant {
-        private const val APK_FILE_NAME = "update.apk"
         private const val DOWNLOAD_ID_KEY = "download"
         private const val DOWNLOAD_ID_NAME = "download_id"
     }

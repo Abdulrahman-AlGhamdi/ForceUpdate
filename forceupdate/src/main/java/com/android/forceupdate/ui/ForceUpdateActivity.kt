@@ -18,6 +18,7 @@ import com.android.forceupdate.repository.download.DownloadRepositoryImpl.Downlo
 import com.android.forceupdate.repository.install.InstallRepositoryImpl
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus.*
 import com.android.forceupdate.ui.ForceUpdateActivity.ForceUpdateState.*
+import com.android.forceupdate.util.ConstantsUtils
 import com.android.forceupdate.util.getAppVersion
 import com.android.forceupdate.util.showSnackBar
 import com.android.forceupdate.util.viewBinding
@@ -67,16 +68,16 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             ImageViewCompat.setImageTintList(binding.optional, ColorStateList.valueOf(color))
         }
 
-        if (viewModel.getLocalFile().exists()) getForceUpdateState(InstallReady())
-        else getForceUpdateState(DownloadReady())
+        if (viewModel.getApkFile().exists()) setForceUpdateView(InstallReady())
+        else setForceUpdateView(DownloadReady())
     }
 
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.downloadStatus.collect {
             when (it) {
-                is DownloadCompleted -> getForceUpdateState(InstallReady())
-                is DownloadProgress -> getForceUpdateState(Downloading(it.progress))
-                is DownloadCanceled -> getForceUpdateState(DownloadReady(it.reason))
+                is DownloadCompleted -> setForceUpdateView(InstallReady())
+                is DownloadProgress -> setForceUpdateView(Downloading(it.progress))
+                is DownloadCanceled -> setForceUpdateView(DownloadReady(it.reason))
                 else -> Unit
             }
         }
@@ -86,26 +87,26 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         viewModel.installStatus.collect {
             when (it) {
                 InstallSucceeded -> finish()
-                InstallProgress -> getForceUpdateState(Installing)
-                InstallCanceled -> getForceUpdateState(InstallReady())
-                is InstallFailure -> getForceUpdateState(DownloadReady(it.message))
+                InstallProgress -> setForceUpdateView(Installing)
+                InstallCanceled -> setForceUpdateView(InstallReady())
+                is InstallFailure -> setForceUpdateView(DownloadReady(it.message))
                 else -> Unit
             }
         }
     }
 
-    private fun getForceUpdateState(state: ForceUpdateState): Unit = when (state) {
+    private fun setForceUpdateView(state: ForceUpdateState): Unit = when (state) {
         is DownloadReady -> {
             binding.button.visibility = View.VISIBLE
             binding.progressBar.visibility = View.GONE
             binding.message.text = getString(R.string.forceupdate_update_message, applicationName)
             binding.button.text = getString(R.string.forceupdate_update)
 
-            val header = intent.getSerializableExtra(EXTRA_HEADER) as? Pair<*, *>
-            val apkLink = intent.getStringExtra(EXTRA_APK_LINK)
+            val header = intent.getSerializableExtra(ConstantsUtils.EXTRA_HEADER) as? Pair<*, *>
+            val apkLink = intent.getStringExtra(ConstantsUtils.EXTRA_APK_LINK) ?: ""
 
             state.message?.let { binding.root.showSnackBar(it) }
-            binding.button.setOnClickListener { viewModel.downloadApk(apkLink!!, header) }
+            binding.button.setOnClickListener { viewModel.downloadApk(apkLink, header) }
         }
         is Downloading -> {
             binding.progressBar.isIndeterminate = state.progress == 0
@@ -120,7 +121,7 @@ internal class ForceUpdateActivity : AppCompatActivity() {
             binding.button.text = getString(R.string.forceupdate_install)
             binding.message.text = getString(R.string.forceupdate_download_completed)
 
-            binding.button.setOnClickListener { viewModel.installApk(viewModel.getLocalFile()) }
+            binding.button.setOnClickListener { viewModel.installApk() }
         }
         is Installing -> {
             binding.button.visibility = View.GONE
@@ -137,12 +138,5 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         data class Downloading(val progress: Int) : ForceUpdateState()
         data class InstallReady(val uri: String? = null) : ForceUpdateState()
         data class DownloadReady(val message: String? = null) : ForceUpdateState()
-    }
-
-    companion object {
-        const val EXTRA_HEADER = "header"
-        const val EXTRA_APK_LINK = "link"
-        const val EXTRA_ANIMATION = "animation"
-        const val EXTRA_OPTIONAL_DOWNLOAD = "optional"
     }
 }

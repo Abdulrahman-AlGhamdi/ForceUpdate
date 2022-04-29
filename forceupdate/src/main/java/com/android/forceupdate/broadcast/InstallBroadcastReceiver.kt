@@ -6,41 +6,36 @@ import android.content.Intent
 import android.content.Intent.EXTRA_INTENT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageInstaller
-import android.os.ResultReceiver
-import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.EXTRA_BUNDLE
-import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.LOCAL_FILE
-import com.android.forceupdate.repository.install.InstallRepositoryImpl.Companion.RESULT_RECEIVER
 import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus
-import java.io.File
+import com.android.forceupdate.repository.install.InstallRepositoryImpl.InstallStatus.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 internal class InstallBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val bundle         = intent.getBundleExtra(EXTRA_BUNDLE)
-        val resultReceiver = bundle?.getParcelable(RESULT_RECEIVER) as? ResultReceiver
-        val localFile      = bundle?.getSerializable(LOCAL_FILE) as File
 
         when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -1)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                val installIntent = intent.getParcelableExtra(EXTRA_INTENT) as? Intent
-                context.startActivity(installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK))
-                bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallProgress)
-                resultReceiver?.send(1, bundle)
+                val installIntent = intent.getParcelableExtra<Intent>(EXTRA_INTENT)
+                installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(installIntent)
+                mutableInstallBroadcastState.value = InstallProgress
             }
             PackageInstaller.STATUS_SUCCESS -> {
-                if (localFile.exists()) localFile.delete()
-                bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallSucceeded)
-                resultReceiver?.send(1, bundle)
+                mutableInstallBroadcastState.value = InstallSucceeded
             }
             PackageInstaller.STATUS_FAILURE_ABORTED -> {
-                bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallCanceled)
-                resultReceiver?.send(1, bundle)
+                mutableInstallBroadcastState.value = InstallCanceled
             }
             else -> intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)?.let { message ->
-                if (localFile.exists()) localFile.delete()
-                bundle.putParcelable(EXTRA_BUNDLE, InstallStatus.InstallFailure(message))
-                resultReceiver?.send(1, bundle)
+                mutableInstallBroadcastState.value = InstallFailure(message)
             }
         }
+    }
+
+    companion object {
+        private val mutableInstallBroadcastState = MutableStateFlow<InstallStatus>(InstallIdle)
+        val installBroadcastState = mutableInstallBroadcastState.asStateFlow()
     }
 }

@@ -10,5 +10,5 @@ interface DownloadRepository {
 
     suspend fun downloadApk(apkLink: String, header: Pair<*, *>?)
 
-    fun getLocalFile() : File
+    fun getApkFile() : File
 }

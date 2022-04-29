@@ -6,9 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.forceupdate.repository.download.DownloadRepository
 import com.android.forceupdate.repository.install.InstallRepository
+import com.android.forceupdate.util.ConstantsUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 internal class ForceUpdateViewModel(
     private val downloadRepository: DownloadRepository,
@@ -18,26 +18,25 @@ internal class ForceUpdateViewModel(
     val downloadStatus = downloadRepository.downloadStatus
     val installStatus = installRepository.installStatus
 
-    fun downloadApk(
-        apkUrl: String,
-        header: Pair<*, *>?
-    ) = viewModelScope.launch(Dispatchers.IO) { downloadRepository.downloadApk(apkUrl, header) }
+    fun downloadApk(apkUrl: String, header: Pair<*, *>?) = viewModelScope.launch(Dispatchers.IO) {
+        downloadRepository.downloadApk(apkUrl, header)
+    }
 
-    fun getLocalFile() = downloadRepository.getLocalFile()
+    fun getApkFile() = downloadRepository.getApkFile()
 
-    fun installApk(localFile: File) = viewModelScope.launch(Dispatchers.IO) {
-        installRepository.installApk(localFile)
+    fun installApk() = viewModelScope.launch(Dispatchers.IO) {
+        installRepository.installApk(getApkFile())
     }
 
     fun getForceUpdateAnimation(intent: Intent): String {
-        val animation = intent.getStringExtra(ForceUpdateActivity.EXTRA_ANIMATION)
+        val animation = intent.getStringExtra(ConstantsUtils.EXTRA_ANIMATION)
 
         return if (!animation.isNullOrEmpty() && animation.endsWith(".json")) animation
         else "force_update_animation.json"
     }
 
     fun getIsOptional(intent: Intent): Int {
-        val isOptional = intent.getBooleanExtra(ForceUpdateActivity.EXTRA_OPTIONAL_DOWNLOAD, false)
+        val isOptional = intent.getBooleanExtra(ConstantsUtils.EXTRA_OPTIONAL_DOWNLOAD, false)
         return if (isOptional) View.VISIBLE else View.GONE
     }
 }
