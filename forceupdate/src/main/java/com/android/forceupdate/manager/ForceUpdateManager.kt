@@ -10,6 +10,7 @@ import android.os.Build.VERSION_CODES.P
 import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
 import com.android.forceupdate.util.ConstantsUtils
+import java.io.File
 
 class ForceUpdateManager(private val activity: Activity) {
 
@@ -33,6 +34,11 @@ class ForceUpdateManager(private val activity: Activity) {
             animation?.let { this.putExtra(ConstantsUtils.EXTRA_ANIMATION, animation) }
             activity.startActivity(this)
         }
+    }
+
+    fun deleteApkFile() {
+        val apkFile = File(activity.filesDir, ConstantsUtils.APK_FILE_NAME)
+        if (apkFile.exists()) apkFile.delete()
     }
 
     fun destroyApplication(dialogMessage: String? = null) {
