@@ -18,8 +18,7 @@ internal class InstallBroadcastReceiver : BroadcastReceiver() {
         when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -1)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 val installIntent = intent.getParcelableExtra<Intent>(EXTRA_INTENT)
-                installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(installIntent)
+                context.startActivity(installIntent?.addFlags(FLAG_ACTIVITY_NEW_TASK))
                 mutableInstallBroadcastState.value = InstallProgress
             }
             PackageInstaller.STATUS_SUCCESS -> {
