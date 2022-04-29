@@ -33,7 +33,7 @@ class DownloadRepositoryImpl(
             val newDownloadId = downloadManager.enqueue(request)
             val query = DownloadManager.Query().setFilterById(newDownloadId)
             sharedPreferences.edit().putLong(DOWNLOAD_ID_KEY, newDownloadId).apply()
-            do getDownloadStatus(query) while (_downloadStatus.value is DownloadProgress)
+            do getDownloadState(query) while (_downloadStatus.value is DownloadProgress)
         }
     } catch (illegalArgumentException: IllegalArgumentException) {
         _downloadStatus.value = DownloadCanceled(context.getString(R.string.download_wrong_link))
@@ -42,26 +42,23 @@ class DownloadRepositoryImpl(
         exception.printStackTrace()
     }
 
-    private fun getDownloadStatus(query: DownloadManager.Query) {
-        val cursor = downloadManager.query(query)
-
-        if (cursor == null || cursor.count < 0 || !cursor.moveToFirst()) {
+    private fun getDownloadState(query: DownloadManager.Query) = downloadManager.query(query).use {
+        if (it == null || it.count < 0 || !it.moveToFirst()) {
             _downloadStatus.value = DownloadCanceled(context.getString(R.string.download_canceled))
             return
         }
 
-        val statusColumn = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-        val status = cursor.getInt(statusColumn)
-        val localUriColumn = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-        val localUri = cursor.getString(localUriColumn)
-        val totalSizeColumn = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-        val totalSize = cursor.getInt(totalSizeColumn)
-        val reasonColumn = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-        val reasonNumber = cursor.getInt(reasonColumn)
+        val statusColumn = it.getColumnIndex(DownloadManager.COLUMN_STATUS)
+        val status = it.getInt(statusColumn)
+        val localUriColumn = it.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+        val localUri = it.getString(localUriColumn)
+        val totalSizeColumn = it.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+        val totalSize = it.getInt(totalSizeColumn)
+        val reasonColumn = it.getColumnIndex(DownloadManager.COLUMN_REASON)
+        val reasonNumber = it.getInt(reasonColumn)
         val reasonMessage = getReasonMessage(reasonNumber)
-        val bytesDownloaded = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-        val bytes = cursor.getInt(bytesDownloaded)
-        cursor.close()
+        val bytesDownloaded = it.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+        val bytes = it.getInt(bytesDownloaded)
 
         when (status) {
             DownloadManager.STATUS_PENDING, DownloadManager.STATUS_RUNNING -> {
@@ -99,15 +96,12 @@ class DownloadRepositoryImpl(
         val uriPath = Uri.parse(uri)?.path ?: ""
         val file = File(uriPath)
 
-        val outputStream = context.openFileOutput(ConstantsUtils.APK_FILE_NAME, MODE_PRIVATE)
-        val inputStream = file.inputStream()
-
-        inputStream.copyTo(outputStream)
-
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-        file.delete()
+        context.openFileOutput(ConstantsUtils.APK_FILE_NAME, MODE_PRIVATE).use { outputStream ->
+            file.inputStream().use { inputStream ->
+                inputStream.copyTo(outputStream)
+                file.delete()
+            }
+        }
 
         _downloadStatus.value = DownloadCompleted
     }
