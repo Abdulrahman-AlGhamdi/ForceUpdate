@@ -1,13 +1,31 @@
-# Force Update ![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
+<h3 align="center">Force Update</h3>
 
-This library helps the user to implement :
-* Force updating the application by only providing the APK link needed. 
-* Check the application version with update version to see whether the application need to be updated or not.
-* Delete application content by clearing all its data
+<p align="center">This library helps the application to:</p>
 
-## Installation
+<table align="center">
+    <tr><td align="center">1</td><td>Force updating the application by only providing the APK link needed.</td></tr>
+    <tr><td align="center">2</td><td>Check whether the application need to be updated or not.</td></tr>
+    <tr><td align="center">3</td><td>Delete the downloaded APK file if needed.</td></tr>
+    <tr><td align="center">4</td><td>Delete application content by clearing all its data.</td></tr>
+</table>
 
-### Repositories
+##
+
+<h3 align="center">Library Images</h3>
+
+<div align="center" >
+    <img src="./appAssets/screenshots/1.png" width="10%">
+    <img src="./appAssets/screenshots/2.png" width="10%">
+    <img src="./appAssets/screenshots/3.png" width="10%">
+    <img src="./appAssets/screenshots/4.png" width="10%">
+</div>
+
+##
+
+<h3 align="center">Installation</h3>
+
+![Minimum API level](https://img.shields.io/badge/API-23+-yellow)
+[![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
 
 ```groovy
 allprojects {
@@ -16,14 +34,16 @@ allprojects {
     }
 }
 ```
-### Dependency [![](https://jitpack.io/v/Abdulrahman-AlGhamdi/ForceUpdate.svg)](https://jitpack.io/#Abdulrahman-AlGhamdi/ForceUpdate)
+
 ```groovy
 implementation 'com.github.Abdulrahman-AlGhamdi:ForceUpdate:tag'
 ```
 
-## Usage
+##
 
-* First  : 
+<h3 align="center">Usage</h3>
+
+* First : 
     * call `ForceUpdateManager` helper class
     * In the constructor you must provide an Activity reference
 
@@ -32,30 +52,26 @@ val forceUpdateManager = ForceUpdateManager(activity = this)
 ```
 
 * Second : 
-    * check the update version with current application version by using `checkAppVersion` function
-    * In the constructor provide the new application update version
-    * The Function will return true or false and that indicate whether you need to update the application or not
+    * Call `checkAppVersion` function
+    * Provides the new application version to this function as argument 
+    * This function will return true or false and that indicate whether you need to update the application or not
 
 ```kotlin
-forceUpdateManager.checkAppVersion(updateVersion = 2)
+forceUpdateManager.checkAppVersion(newVersion = 2)
 ```
 
-* Third  : 
-    * call `updateApplication` to start force update process
-    * In the constructor provide the APK link
+* Third : 
+    * Call `updateApplication` to start the force update process
+    * Provide the APK file link that is going to be install
     * Provide a header to the download manger if you need
-    * Make the force update optional or not
-    * Change the loading animation by adding the file name that ends with `.json` as an argument <br> (this file must be in the assets folder)
+    * Make the update optional or not
+    * Change the default loading animation by providing the lottie file name that ends with `.json` <br> (this file must be in the assets folder)
 
-```kotlin
-forceUpdateManager.updateApplication(apkLink = "APK_LINK")
-```
-or
 ```kotlin
 forceUpdateManager.updateApplication(
-    apkLink   = "APK_LINK",
-    header    = Pair("header", "value"),
-    optional  = true,
+    apkLink = "APK_LINK",
+    header = Pair("header", "value"),
+    optional = true,
     animation = "loading.json"
 )
 ```
@@ -65,14 +81,12 @@ forceUpdateManager.updateApplication(
     * also you can provide custom message in the function constructor
 
 ```kotlin
-forceUpdateManager.destroyApplication()
-```
-or
-```kotlin
 forceUpdateManager.destroyApplication(dialogMessage = "MESSAGE")
 ```
 
-## License
+##
+
+<h3 align="center">License</h3>
 
 ```
 Copyright 2021 Abdulrahman Al-Ghamdi
