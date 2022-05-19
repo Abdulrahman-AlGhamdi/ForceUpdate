@@ -75,19 +75,6 @@ internal class ForceUpdateActivity : AppCompatActivity() {
         else setForceUpdateView(DownloadReady())
     }
 
-//    private fun checkPackageInstallPermission(action: () -> (Any)) {
-//        if (!packageManager.canRequestPackageInstalls()) AlertDialog.Builder(this).apply {
-//            this.setTitle(applicationName)
-//            this.setIcon(applicationLogo)
-//            this.setMessage(getString(R.string.forceupdate_permission_message, applicationName))
-//            this.setPositiveButton(R.string.forceupdate_permission_ok) { _, _ ->
-//                val settings = Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES
-//                startActivity(Intent(settings, Uri.parse("package:$packageName")))
-//            }
-//            this.show()
-//        } else action()
-//    }
-
     private fun getDownloadStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.downloadStatus.collect {
             when (it) {
