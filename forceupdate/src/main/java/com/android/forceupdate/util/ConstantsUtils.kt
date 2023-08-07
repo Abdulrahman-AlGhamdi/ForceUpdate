@@ -6,4 +6,5 @@ object ConstantsUtils {
     const val EXTRA_ANIMATION = "animation"
     const val EXTRA_OPTIONAL_DOWNLOAD = "optional"
     const val APK_FILE_NAME = "update.apk"
+    const val IS_DELETE_APK = "isdeleteapk"
 }
