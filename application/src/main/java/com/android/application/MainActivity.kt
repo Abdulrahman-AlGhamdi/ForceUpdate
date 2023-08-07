@@ -7,7 +7,7 @@ import com.android.forceupdate.manager.ForceUpdateManager
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.forceupdate_activity_main)
 
         val forceUpdateManager = ForceUpdateManager(activity = this)
 
@@ -15,7 +15,8 @@ class MainActivity : AppCompatActivity() {
             apkLink   = "https://storage.evozi.com/apk/dl/16/09/04/com.spotify.music_82316170.apk",
             header    = null,
             optional  = false,
-            animation = null
+            animation = null,
+            false
         )
     }
 }

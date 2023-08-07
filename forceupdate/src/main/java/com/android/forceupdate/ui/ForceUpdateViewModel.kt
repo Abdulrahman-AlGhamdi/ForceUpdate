@@ -39,4 +39,8 @@ internal class ForceUpdateViewModel(
         val isOptional = intent.getBooleanExtra(ConstantsUtils.EXTRA_OPTIONAL_DOWNLOAD, false)
         return if (isOptional) View.VISIBLE else View.GONE
     }
+
+    fun getIsDeleteApk(intent: Intent): Boolean {
+        return intent.getBooleanExtra(ConstantsUtils.IS_DELETE_APK, false)
+    }
 }

@@ -11,6 +11,7 @@ import com.android.forceupdate.R
 import com.android.forceupdate.ui.ForceUpdateActivity
 import com.android.forceupdate.util.ConstantsUtils
 import java.io.File
+import java.lang.Appendable
 
 class ForceUpdateManager(private val activity: Activity) {
 
@@ -25,11 +26,13 @@ class ForceUpdateManager(private val activity: Activity) {
         apkLink   : String,
         header    : Pair<String, String>? = null,
         optional  : Boolean = false,
-        animation : String? = null
+        animation : String? = null,
+        isDeleteApk: Boolean
     ) {
         Intent(activity, ForceUpdateActivity::class.java).apply {
             this.putExtra(ConstantsUtils.EXTRA_APK_LINK, apkLink)
             this.putExtra(ConstantsUtils.EXTRA_OPTIONAL_DOWNLOAD, optional)
+            this.putExtra(ConstantsUtils.IS_DELETE_APK, isDeleteApk)
             header?.let { this.putExtra(ConstantsUtils.EXTRA_HEADER, it) }
             animation?.let { this.putExtra(ConstantsUtils.EXTRA_ANIMATION, animation) }
             activity.startActivity(this)

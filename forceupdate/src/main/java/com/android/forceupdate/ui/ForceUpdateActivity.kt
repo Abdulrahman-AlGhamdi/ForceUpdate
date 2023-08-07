@@ -1,5 +1,6 @@
 package com.android.forceupdate.ui
 
+import android.app.ActivityManager
 import android.content.pm.PackageInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -26,6 +27,7 @@ import com.android.forceupdate.util.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.io.File
 
 
 internal class ForceUpdateActivity : AppCompatActivity() {
@@ -89,7 +91,15 @@ internal class ForceUpdateActivity : AppCompatActivity() {
     private fun getInstallStatus() = lifecycleScope.launch(Dispatchers.Main) {
         viewModel.installStatus.collect {
             when (it) {
-                InstallSucceeded -> finish()
+                InstallSucceeded -> {
+                    if(viewModel.getIsDeleteApk(intent)){
+                        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+                        activityManager.clearApplicationUserData()
+                        val apkFile = File(filesDir, ConstantsUtils.APK_FILE_NAME)
+                        if (apkFile.exists()) apkFile.delete()
+                    }
+                    finish()
+                }
                 InstallProgress -> setForceUpdateView(Installing)
                 InstallCanceled -> setForceUpdateView(InstallReady())
                 is InstallFailure -> setForceUpdateView(DownloadReady(it.message))
